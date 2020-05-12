@@ -1326,11 +1326,6 @@ namespace Windows.UI.Xaml
 
 #region CSHTML5 Internal
 
-        internal PropertyMetadata GetTypeMetaData(Type forType)
-        {
-            return GetMetadata(forType);
-        }
-
         public bool IsAttached { get; private set; }
 
 #endregion

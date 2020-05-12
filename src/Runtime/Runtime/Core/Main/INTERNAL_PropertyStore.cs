@@ -40,7 +40,7 @@ namespace CSHTML5.Internal
             if (createIfNotFoud)
             {
                 // Get the type metadata
-                PropertyMetadata typeMetadata = dependencyProperty.GetTypeMetaData(dependencyObject.GetType());
+                PropertyMetadata typeMetadata = dependencyProperty.GetMetadata(dependencyObject.GetType());
 
                 //----------------------
                 // CREATE A NEW STORAGE:
@@ -87,7 +87,7 @@ namespace CSHTML5.Internal
             if (createIfNotFoud)
             {
                 // Get the type metadata (if any):
-                PropertyMetadata typeMetadata = dependencyProperty.GetTypeMetaData(dependencyObject.GetType());
+                PropertyMetadata typeMetadata = dependencyProperty.GetMetadata(dependencyObject.GetType());
 
                 global::System.Diagnostics.Debug.Assert(typeMetadata != null && typeMetadata.Inherits,
                                                         string.Format("{0} is not an inherited property.", dependencyProperty.Name));

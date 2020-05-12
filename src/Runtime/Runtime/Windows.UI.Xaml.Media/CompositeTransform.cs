@@ -345,49 +345,49 @@ namespace Windows.UI.Xaml.Media
             //-------------
 
             //TranslateX:
-            CSSEquivalent translateXcssEquivalent = TranslateXProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent translateXcssEquivalent = TranslateXProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (translateXcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(translateXcssEquivalent.DomElement, translateXcssEquivalent.Name, translateXcssEquivalent.Value(compositeTransform, translateX));
             }
 
             //TranslateY:
-            CSSEquivalent translateYcssEquivalent = TranslateYProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent translateYcssEquivalent = TranslateYProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (translateYcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(translateYcssEquivalent.DomElement, translateYcssEquivalent.Name, translateYcssEquivalent.Value(compositeTransform, translateY)); 
             }
 
             //Rotation:
-            CSSEquivalent rotationcssEquivalent = RotationProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent rotationcssEquivalent = RotationProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (rotationcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(rotationcssEquivalent.DomElement, rotationcssEquivalent.Name, rotationcssEquivalent.Value(compositeTransform, rotation)); 
             }
 
             //SkewX:
-            CSSEquivalent skewXcssEquivalent = SkewXProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent skewXcssEquivalent = SkewXProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (skewXcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(skewXcssEquivalent.DomElement, skewXcssEquivalent.Name, skewXcssEquivalent.Value(compositeTransform, skewX)); 
             }
 
             //SkewY:
-            CSSEquivalent skewYcssEquivalent = SkewYProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent skewYcssEquivalent = SkewYProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (skewYcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(skewYcssEquivalent.DomElement, skewYcssEquivalent.Name, skewYcssEquivalent.Value(compositeTransform, skewY)); 
             }
 
             //ScaleX:
-            CSSEquivalent scaleXcssEquivalent = ScaleXProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent scaleXcssEquivalent = ScaleXProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (scaleXcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(scaleXcssEquivalent.DomElement, scaleXcssEquivalent.Name, scaleXcssEquivalent.Value(compositeTransform, scaleX)); 
             }
 
             //ScaleY:
-            CSSEquivalent scaleYcssEquivalent = ScaleYProperty.GetTypeMetaData(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
+            CSSEquivalent scaleYcssEquivalent = ScaleYProperty.GetMetadata(typeof(CompositeTransform)).GetCSSEquivalent(compositeTransform);
             if (scaleYcssEquivalent != null)
             {
                 INTERNAL_HtmlDomManager.SetDomElementStylePropertyUsingVelocity(scaleYcssEquivalent.DomElement, scaleYcssEquivalent.Name, scaleYcssEquivalent.Value(compositeTransform, scaleY)); 

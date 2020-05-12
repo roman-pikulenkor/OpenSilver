@@ -1281,7 +1281,7 @@ return globalIndexes;
             }
             else
             {
-                newTextWrapping = (TextWrapping)TextWrappingProperty.GetTypeMetaData(typeof(TextBox)).DefaultValue; // Note: "TypeMetadata" is not null because declared above.
+                newTextWrapping = (TextWrapping)TextWrappingProperty.GetMetadata(typeof(TextBox)).DefaultValue; // Note: "TypeMetadata" is not null because declared above.
             }
             if (INTERNAL_HtmlDomManager.IsNotUndefinedOrNull(textBox._contentEditableDiv))
             {

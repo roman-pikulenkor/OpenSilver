@@ -125,7 +125,7 @@ namespace Windows.UI.Xaml.Media.Animation
             if (To != null)
             {
                 // - Get the propertyMetadata from the property
-                PropertyMetadata propertyMetadata = _propDp.GetTypeMetaData(_propertyContainer.GetType());
+                PropertyMetadata propertyMetadata = _propDp.GetMetadata(_propertyContainer.GetType());
 
                 //we make a specific name for this animation:
                 string specificGroupName = parameters.VisualStateGroupName + animationInstanceSpecificName.ToString();
@@ -231,7 +231,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 if (To != null)// && target is FrameworkElement) //todo: "To" can never be "null", fix this.
                 {
                     // - Get the propertyMetadata from the property
-                    PropertyMetadata propertyMetadata = _propDp.GetTypeMetaData(_propertyContainer.GetType());
+                    PropertyMetadata propertyMetadata = _propDp.GetMetadata(_propertyContainer.GetType());
 
                     //we make a specific name for this animation:
                     string specificGroupName = groupName + animationInstanceSpecificName.ToString();

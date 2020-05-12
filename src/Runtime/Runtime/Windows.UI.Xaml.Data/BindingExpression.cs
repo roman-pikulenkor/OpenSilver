@@ -227,7 +227,7 @@ namespace Windows.UI.Xaml.Data
                     {
                         if (propertyType.IsValueType && !propertyType.FullName.StartsWith("System.Nullable`1"))
                         {
-                            value = property.GetTypeMetaData(owner.GetType()).DefaultValue;
+                            value = property.GetMetadata(owner.GetType()).DefaultValue;
                         }
                     }
                     else
@@ -246,7 +246,7 @@ namespace Windows.UI.Xaml.Data
                                 if (!nonNullableMemberType.IsAssignableFrom(valueType)) //the value cannot be set to the item so we get the DependencyProperty's default value
                                 {
                                     //todo: Add a handling of the special cases of "conventions" (see note "Observations from Silverlight" above).
-                                    value = property.GetTypeMetaData(owner.GetType()).DefaultValue;
+                                    value = property.GetMetadata(owner.GetType()).DefaultValue;
                                 }
                             }
                         }
