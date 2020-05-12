@@ -113,7 +113,8 @@ namespace Windows.UI.Xaml.Media
 
         private void ApplyCSSChanges(SkewTransform skewTransform, double angleX, double angleY)
         {
-            CSSEquivalent angleXcssEquivalent = AngleXProperty.GetMetadata(typeof(SkewTransform)).GetCSSEquivalent(skewTransform);
+            DependencyObjectType dType = DependencyObjectType.FromSystemTypeInternal(typeof(SkewTransform));
+            CSSEquivalent angleXcssEquivalent = AngleXProperty.GetMetadata(dType).GetCSSEquivalent(skewTransform);
             if (angleXcssEquivalent != null)
             {
                 object domElementX = angleXcssEquivalent.DomElement;
@@ -125,7 +126,7 @@ namespace Windows.UI.Xaml.Media
                 }
             }
 
-            CSSEquivalent angleYcssEquivalent = AngleYProperty.GetMetadata(typeof(SkewTransform)).GetCSSEquivalent(skewTransform);
+            CSSEquivalent angleYcssEquivalent = AngleYProperty.GetMetadata(dType).GetCSSEquivalent(skewTransform);
             if (angleYcssEquivalent != null)
             {
                 object domElementY = angleYcssEquivalent.DomElement;

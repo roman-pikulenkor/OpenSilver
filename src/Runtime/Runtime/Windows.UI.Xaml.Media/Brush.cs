@@ -96,7 +96,7 @@ namespace Windows.UI.Xaml.Media
                     }
                     else
                     {
-                        PropertyMetadata propertyMetadata = dependencyProperty.GetMetadata(uiElement.GetType());
+                        PropertyMetadata propertyMetadata = dependencyProperty.GetMetadata(uiElement.DependencyObjectType);
                         if (propertyMetadata.GetCSSEquivalent != null) // If the parent has a CSSEquivalent, we use it, otherwise we use the parent PropertyChanged method.
                         {
                             var parentPropertyCSSEquivalent = propertyMetadata.GetCSSEquivalent(uiElement);

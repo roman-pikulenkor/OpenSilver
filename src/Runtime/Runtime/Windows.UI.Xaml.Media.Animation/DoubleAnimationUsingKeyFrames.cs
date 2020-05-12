@@ -311,7 +311,7 @@ namespace Windows.UI.Xaml.Media.Animation
             this.Completed -= ApplyLastKeyFrame;
             this.Completed += ApplyLastKeyFrame;
             InitializeKeyFramesSet();
-            _propertyMetadata = _propDp.GetMetadata(_propertyContainer.GetType());
+            _propertyMetadata = _propDp.GetMetadata(_propertyContainer.DependencyObjectType);
         }
 
         internal override void RestoreDefaultCore()

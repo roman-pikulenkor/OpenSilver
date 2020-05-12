@@ -395,7 +395,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 // - Get the DependencyProperty
                 DependencyProperty dp = (DependencyProperty)dependencyPropertyField.GetValue(null);
                 // - Get the propertyMetadata from the property
-                PropertyMetadata propertyMetadata = dp.GetMetadata(target.GetType());
+                PropertyMetadata propertyMetadata = dp.GetMetadata(target.DependencyObjectType);
                 // - Get the cssPropertyName from the PropertyMetadata
 
                 if (propertyMetadata.GetCSSEquivalent != null)

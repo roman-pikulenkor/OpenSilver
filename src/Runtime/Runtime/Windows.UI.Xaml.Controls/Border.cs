@@ -104,7 +104,10 @@ namespace Windows.UI.Xaml.Controls
 
             if (this.BorderBrush == null)
             {
-                INTERNAL_PropertyStore.ApplyCssChanges(null, null, Border.BorderBrushProperty.GetMetadata(typeof(Border)), this);
+                INTERNAL_PropertyStore.ApplyCssChanges(null, // old value
+                                                       null, // new value
+                                                       Border.BorderBrushProperty.GetMetadata(DependencyObjectType.FromSystemTypeInternal(typeof(Border))), 
+                                                       this);
             }
 
 #if REWORKLOADED

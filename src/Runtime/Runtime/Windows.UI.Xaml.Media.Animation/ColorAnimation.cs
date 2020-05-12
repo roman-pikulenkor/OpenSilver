@@ -139,7 +139,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 var castedValue = DynamicCast(To, _propDp.PropertyType); //Note: we put this line here because the Xaml could use a Color gotten from a StaticResource (which was therefore not converted to a SolidColorbrush by the compiler in the .g.cs file) and led to a wrong type set in a property (Color value in a property of type Brush).
 
                 // - Get the propertyMetadata from the property
-                PropertyMetadata propertyMetadata = _propDp.GetMetadata(_propertyContainer.GetType());
+                PropertyMetadata propertyMetadata = _propDp.GetMetadata(_propertyContainer.DependencyObjectType);
                 // - Get the cssPropertyName from the PropertyMetadata
 
                 //we make a specific name for this animation:
@@ -349,7 +349,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 DependencyProperty dp = (global::Windows.UI.Xaml.DependencyProperty)dependencyPropertyField.GetValue(null);
 #endif
                     // - Get the propertyMetadata from the property
-                    PropertyMetadata propertyMetadata = dp.GetMetadata(_propertyContainer.GetType());
+                    PropertyMetadata propertyMetadata = dp.GetMetadata(_propertyContainer.DependencyObjectType);
                     // - Get the cssPropertyName from the PropertyMetadata
 
                     //we make a specific name for this animation:
