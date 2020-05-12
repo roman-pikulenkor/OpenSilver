@@ -299,7 +299,7 @@ namespace CSHTML5.Internal
             }
             else // Property default value
             {
-                effectiveValue = storage.TypeMetadata.DefaultValue;
+                effectiveValue = storage.TypeMetadata.GetDefaultValue(storage.Owner, storage.Property);
                 kind = BaseValueSourceInternal.Default;
             }
         }
@@ -344,6 +344,13 @@ namespace CSHTML5.Internal
                     // value source remains the same.
                     // Exit if the newly set value is of lower precedence than the effective value.
                     return;
+                }
+
+                // Remove the cached default value if we are moving from a DefaultValue and we are
+                // using a DefaultValueFactory.
+                if (oldBaseValueSource == BaseValueSourceInternal.Default && storage.Property.IsPotentiallyUsingDefaultValueFactory)
+                {
+                    storage.TypeMetadata.ClearCachedDefaultValue(storage.Owner, storage.Property);
                 }
 
                 // Get old value before it gets overriden
@@ -393,13 +400,15 @@ namespace CSHTML5.Internal
                         storage.Value = newExpr; // Set the new base value
                     }
 
+                    // Before the expression is attached it has default value
+                    object defaultValue = storage.TypeMetadata.GetDefaultValue(storage.Owner, storage.Property);
                     if (effectiveValueKind == BaseValueSourceInternal.Local)
                     {
-                        storage.SetExpressionValue(storage.TypeMetadata.DefaultValue, newExpr);
+                        storage.SetExpressionValue(defaultValue, newExpr);
                     }
                     else
                     {
-                        storage.SetExpressionFromStyleValue(storage.TypeMetadata.DefaultValue, newExpr);
+                        storage.SetExpressionFromStyleValue(defaultValue, newExpr);
                     }
 
                     // 1- 'isNewBinding == true' means that we are attaching a new BindingExpression.
@@ -408,7 +417,7 @@ namespace CSHTML5.Internal
                     // 3- Otherwise we are trying to change the value of a TwoWay binding.
                     // In that case we have to preserve the BindingExpression (this is not the case if the first two 
                     // situations), hence the following line :
-                    computedValue = isNewBinding || newValue is BindingExpression ? newExpr.GetValue(storage.Property, storage.Owner.GetType())
+                    computedValue = isNewBinding || newValue is BindingExpression ? newExpr.GetValue(storage.Property, storage.Owner)
                                                                                   : newValue;
                     computedValue = storage.Property.PropertyType == typeof(string)
                                     ? computedValue?.ToString()

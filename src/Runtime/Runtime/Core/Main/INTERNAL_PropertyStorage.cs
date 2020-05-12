@@ -37,7 +37,7 @@ namespace CSHTML5.Internal
             this.Owner = owner;
             this.Property = property;
             this.TypeMetadata = typeMetadata;
-            this.Value = typeMetadata.DefaultValue;
+            this.Value = typeMetadata.GetDefaultValue(owner, property);
         }
 
         #endregion

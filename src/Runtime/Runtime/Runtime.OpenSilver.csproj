@@ -53,9 +53,11 @@
 	</ItemGroup>
 	<ItemGroup>
 		<Compile Include="Core\Main\CopyOnWriteList.cs" />
-		<Compile Include="Core\Main\INTERNAL_NamedObject.cs" />
 		<Compile Include="Core\Main\WeakReferenceList.cs" />
 		<Compile Include="Core\Main\WeakReferenceListEnumerator.cs" />
+		<Compile Include="Core\CSHTML5\Internal\NamedObject.cs" />
+		<Compile Include="Core\CSHTML5\Utility\FrugalMap.cs" />
+		<Compile Include="Core\CSHTML5\Utility\ItemList.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity.Core\WORKINPROGRESS\ChangePropertyAction.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity.Core\WORKINPROGRESS\ComparisonConditionType.cs" />
 		<Compile Include="Microsoft.Expression.Interactivity.Core\WORKINPROGRESS\ControlStoryboardAction.cs" />
@@ -154,6 +156,9 @@
 		<Compile Include="Windows.UI.Xaml.Media\WORKINPROGRESS\VisualTreeHelper.cs" />
 		<Compile Include="Windows.UI.Xaml\ResourceDictionaryCollection.cs" />
 		<Compile Include="Windows.UI.Xaml\ResourcesChangeInfo.cs" />
+		<Compile Include="Windows.UI.Xaml\DefaultValueFactory.cs" />
+		<Compile Include="Windows.UI.Xaml\DependencyObjectType.cs" />
+		<Compile Include="Windows.UI.Xaml\ValidateValueCallback.cs" />
 		<Compile Include="Windows.UI.Xaml\WORKINPROGRESS\ApplicationLifetimeObjectsCollection.cs" />
 		<Compile Include="Windows.UI.Xaml\WORKINPROGRESS\DataTemplate.cs" />
 		<Compile Include="Windows.UI.Xaml\WORKINPROGRESS\DragEventHandler.cs" />

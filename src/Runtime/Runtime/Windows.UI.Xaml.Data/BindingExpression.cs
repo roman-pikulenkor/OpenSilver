@@ -142,7 +142,7 @@ namespace Windows.UI.Xaml.Data
         void IPropertyPathWalkerListener.ValueChanged() { ValueChanged(); } //this is so that we don't have a compilation error while still are able to give valueChanged() as internal (interfaces do not allow implementation with other access than public...)
 
 
-        internal object GetValue(DependencyProperty property, Type OwnerType = null)
+        internal object GetValue(DependencyProperty property, DependencyObject owner)
         {
             object value;
 
@@ -153,13 +153,13 @@ namespace Windows.UI.Xaml.Data
                 //------------------------
 
                 PropertyMetadata typeMetadata = null;
-                if (OwnerType == null)
+                if (owner == null)
                 {
-                    typeMetadata = property.GetTypeMetaData(property.OwnerType);
+                    typeMetadata = property.GetMetadata(property.OwnerType);
                 }
                 else
                 {
-                    typeMetadata = property.GetTypeMetaData(OwnerType);
+                    typeMetadata = property.GetMetadata(owner.DependencyObjectType);
                 }
                 //todo: IMPORTANT: add the type to the parameters of the method so that we can call GetPropertyMetadata while considering the right type. (we cannot use property.Ownertype
 
@@ -175,7 +175,8 @@ namespace Windows.UI.Xaml.Data
                     // Apply the default value of the dependency property:
                     if (typeMetadata != null)
                     {
-                        value = typeMetadata.DefaultValue; // This is useful for example to prevent "e.NewValue" in "Visibility_PropertyChanged" from being equal to "null" rather than "Visible" when changing the DataContext to null while Visibility was bound to a property of the DataContext. For details, see "AccountManagerApp" and see the commits of CSHTML5 around the date 2015.05.23.
+                        value = typeMetadata.GetDefaultValue(owner, property);
+                        //value = typeMetadata.DefaultValue; // This is useful for example to prevent "e.NewValue" in "Visibility_PropertyChanged" from being equal to "null" rather than "Visible" when changing the DataContext to null while Visibility was bound to a property of the DataContext. For details, see "AccountManagerApp" and see the commits of CSHTML5 around the date 2015.05.23.
                     }
                 }
 
@@ -226,7 +227,7 @@ namespace Windows.UI.Xaml.Data
                     {
                         if (propertyType.IsValueType && !propertyType.FullName.StartsWith("System.Nullable`1"))
                         {
-                            value = property.GetTypeMetaData(OwnerType).DefaultValue;
+                            value = property.GetTypeMetaData(owner.GetType()).DefaultValue;
                         }
                     }
                     else
@@ -245,7 +246,7 @@ namespace Windows.UI.Xaml.Data
                                 if (!nonNullableMemberType.IsAssignableFrom(valueType)) //the value cannot be set to the item so we get the DependencyProperty's default value
                                 {
                                     //todo: Add a handling of the special cases of "conventions" (see note "Observations from Silverlight" above).
-                                    value = property.GetTypeMetaData(OwnerType).DefaultValue;
+                                    value = property.GetTypeMetaData(owner.GetType()).DefaultValue;
                                 }
                             }
                         }

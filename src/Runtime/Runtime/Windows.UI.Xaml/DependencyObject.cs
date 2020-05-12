@@ -233,6 +233,25 @@ namespace Windows.UI.Xaml
 
         #endregion
 
+        // Specialized Type identification
+        private DependencyObjectType _dType;
+
+        /// <summary>Returns the DType that represents the CLR type of this instance</summary>
+        public DependencyObjectType DependencyObjectType
+        {
+            get
+            {
+                if (_dType == null)
+                {
+                    // Specialized type identification
+                    _dType = DependencyObjectType.FromSystemTypeInternal(GetType());
+                }
+
+                // Do not call VerifyAccess because this method is trivial.
+                return _dType;
+            }
+        }
+
         internal Dictionary<DependencyProperty, INTERNAL_PropertyStorage> INTERNAL_PropertyStorageDictionary { get; } // Contains all the properties that are either not in INTERNAL_AllInheritedProperties or in INTERNAL_UsefulInheritedProperties
         internal Dictionary<DependencyProperty, INTERNAL_PropertyStorage> INTERNAL_AllInheritedProperties { get; } // Here so that when we attach a child, the child gets all the properties that are in there (this allows the inherited properties to go all the way down even for properties that are not contained in the children)
         internal List<DependencyProperty> INTERNAL_PropertiesForWhichToCallPropertyChangedWhenLoadedIntoVisualTree; // When a UI element is added to the Visual Tree, we call "PropertyChanged" on all its set properties so that the control can refresh itself. However, when a property is not set, we don't call PropertyChanged. Unless the property is listed here.
@@ -263,7 +282,7 @@ namespace Windows.UI.Xaml
             {
                 return INTERNAL_PropertyStore.GetEffectiveValue(storage);
             }
-            return dependencyProperty.GetTypeMetaData(this.GetType()).DefaultValue;
+            return dependencyProperty.GetMetadata(DependencyObjectType).GetDefaultValue(this, dependencyProperty);
         }
 
         /// <summary>
@@ -360,7 +379,7 @@ namespace Windows.UI.Xaml
             {
                 return storage.AnimatedValue;
             }
-            return dependencyProperty.GetTypeMetaData(this.GetType()).DefaultValue;
+            return dependencyProperty.GetMetadata(DependencyObjectType).GetDefaultValue(this, dependencyProperty);
         }
 
         public void SetVisualStateValue(DependencyProperty dependencyProperty, object value)
@@ -393,7 +412,7 @@ namespace Windows.UI.Xaml
             {
                 return storage.AnimatedValue;
             }
-            return dependencyProperty.GetTypeMetaData(this.GetType()).DefaultValue;
+            return dependencyProperty.GetMetadata(DependencyObjectType).GetDefaultValue(this, dependencyProperty);
         }
 
         public void SetValue(DependencyProperty dp, object value)

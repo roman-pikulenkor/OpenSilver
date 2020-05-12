@@ -8,11 +8,11 @@ namespace CSHTML5.Internal
     /// "new Object()".  The name will show up in the debugger, instead of
     /// merely "{object}"
     /// </summary>
-    internal class INTERNAL_NamedObject
+    internal class NamedObject
     {
         private string _name;
 
-        public INTERNAL_NamedObject(string name)
+        public NamedObject(string name)
         {
             if (string.IsNullOrEmpty(name))
             {

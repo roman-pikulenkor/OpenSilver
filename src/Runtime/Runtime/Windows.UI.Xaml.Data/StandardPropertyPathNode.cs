@@ -145,8 +145,7 @@ namespace Windows.UI.Xaml.Data
                     }
                     else
                     {
-                        Type type = Source.GetType();
-                        dependencyProperty = INTERNAL_TypeToStringsToDependencyProperties.GetPropertyInTypeOrItsBaseTypes(type, _propertyName);
+                        dependencyProperty = DependencyProperty.FromName(_propertyName, Source.GetType());
                     }
 
                     if (dependencyProperty != null)
