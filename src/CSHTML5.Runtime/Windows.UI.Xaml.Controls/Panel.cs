@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -70,7 +71,97 @@ namespace Windows.UI.Xaml.Controls
 
         private void OnChildrenCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            this.ManageChildrenChanged_v2(e.Action, e.OldStartingIndex, e.OldItems, e.NewStartingIndex, e.NewItems);
+            //this.ManageChildrenChanged_v2(e.Action, e.OldStartingIndex, e.OldItems, e.NewStartingIndex, e.NewItems);
+            this.ManageChildrenChanged_v2_1(e);
+        }
+
+        private void ManageChildrenChanged_v2_1(NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Reset:
+                    this.OnChildrenReset();
+                    break;
+                case NotifyCollectionChangedAction.Add:
+                    Debug.Assert(e.NewItems.Count == 1);
+                    this.OnChildrenAdded((UIElement)e.NewItems[0], e.NewStartingIndex);
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    Debug.Assert(e.OldItems.Count == 1 || this.Children.Count == 0);
+                    for (int i = 0; i < e.OldItems.Count; ++i)
+                    {
+                        this.OnChildrenRemoved((UIElement)e.OldItems[i], i);
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    Debug.Assert(e.OldItems.Count == 1 && e.NewItems.Count == 1);
+                    this.OnChildrenReplaced((UIElement)e.OldItems[0], (UIElement)e.NewItems[0], e.OldStartingIndex);
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    Debug.Assert(e.OldItems.Count == 1);
+                    this.OnChildrenMoved((UIElement)e.OldItems[0], e.NewStartingIndex, e.OldStartingIndex);
+                    break;
+            }
+        }
+
+        internal virtual void OnChildrenReset()
+        {
+            if (this.INTERNAL_VisualChildrenInformation != null)
+            {
+                foreach (var childInfo in this.INTERNAL_VisualChildrenInformation.Select(kp => kp.Value).ToArray())
+                {
+                    INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(childInfo.INTERNAL_UIElement, this);
+                }
+            }
+
+            for (int i = 0; i < this.Children.Count; ++i)
+            {
+#if REWORKLOADED
+                this.AddVisualChild(this.Children[i], i);
+#else
+                INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(this.Children[i], this, i);
+#endif
+            }
+        }
+
+        internal virtual void OnChildrenAdded(UIElement newChild, int index)
+        {
+#if REWORKLOADED
+            this.AddVisualChild(newChild, index);
+#else
+            INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(newChild, this, index);
+#endif
+        }
+
+        internal virtual void OnChildrenRemoved(UIElement oldChild, int index)
+        {
+            INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(oldChild, this);
+        }
+
+        internal virtual void OnChildrenReplaced(UIElement oldChild, UIElement newChild, int index)
+        {
+            if (oldChild == newChild)
+            {
+                return;
+            }
+
+            INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(oldChild, this);
+
+#if REWORKLOADED
+            this.AddVisualChild(newChild, index);
+#else
+            INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(newChild, this, index);
+#endif
+        }
+
+        internal virtual void OnChildrenMoved(UIElement oldChild, int newIndex, int oldIndex)
+        {
+            if (newIndex == oldIndex)
+            {
+                return;
+            }
+
+            INTERNAL_VisualTreeManager.MoveVisualChildInSameParent(oldChild, this, newIndex, oldIndex);
         }
 
         /// <summary>
@@ -140,7 +231,8 @@ namespace Windows.UI.Xaml.Controls
                 _children.CollectionChanged += OnChildrenCollectionChanged;
             }
 
-            this.ManageChildrenChanged(this._children, this._children);
+            this.OnChildrenReset();
+            //this.ManageChildrenChanged(this._children, this._children);
         }
 
         protected internal override void INTERNAL_OnDetachedFromVisualTree()
@@ -186,73 +278,73 @@ namespace Windows.UI.Xaml.Controls
             }
         }
 
-        internal virtual void ManageChildrenChanged_v2(NotifyCollectionChangedAction action, int oldIndex, IList oldChildren, int newIndex, IList newChildren)
-        {
-            //if newIndex > oldIndex && oldIndex >= 0 consider newIndex as newIndex + oldChildren.Count to compensate the fact that newIndex is considering without the oldElements
-            //For every item in oldChildren add to hashSet to remove it.
-            //For every item in newChildren:
-            //  - if item in oldChildren remove from oldChildren's HashSet, and move it to newIndex + currentIndex in newChildren
-            //  - else create and add the new child at the index of newIndex
-            //  In both cases, increment currentIndex in NewChildren
-            //For every item left in the oldChildren's HashSet, remove it.
+//        internal virtual void ManageChildrenChanged_v2(NotifyCollectionChangedAction action, int oldIndex, IList oldChildren, int newIndex, IList newChildren)
+//        {
+//            //if newIndex > oldIndex && oldIndex >= 0 consider newIndex as newIndex + oldChildren.Count to compensate the fact that newIndex is considering without the oldElements
+//            //For every item in oldChildren add to hashSet to remove it.
+//            //For every item in newChildren:
+//            //  - if item in oldChildren remove from oldChildren's HashSet, and move it to newIndex + currentIndex in newChildren
+//            //  - else create and add the new child at the index of newIndex
+//            //  In both cases, increment currentIndex in NewChildren
+//            //For every item left in the oldChildren's HashSet, remove it.
 
-            if (action == NotifyCollectionChangedAction.Move && newChildren == null)
-            {
-                //We need to do this because in the case of a move action, only the indexes and oldChildren are set and it doesn't fit with the logic of this method.
-                newChildren = oldChildren;
-            }
-            bool compensateMovedItems = false;
-            HashSet<UIElement> elementsToRemoveFromVisualTree = null;
-            if (oldChildren != null)
-            {
-                if (newIndex > oldIndex && oldIndex > -1)
-                {
-                    compensateMovedItems = true;
-                    newIndex += oldChildren.Count; //this is to compensate the fact that newIndex is the index after removing the oldChildren.
-                }
-                elementsToRemoveFromVisualTree = new HashSet<UIElement>();
-                foreach (UIElement uiE in oldChildren)
-                {
-                    elementsToRemoveFromVisualTree.Add(uiE);
-                }
-            }
-            else
-            {
-                elementsToRemoveFromVisualTree = new HashSet<UIElement>();
-            }
-            if (newChildren != null)
-            {
-                int indexInNewChildren = 0;
-                int itemsMoved = 0; //Note: this is used to compensate the fact that the items were moved from a previous index to a further one so there are still the same amount of elements before the element that was 
-                foreach (UIElement child in newChildren)
-                {
-                    if(elementsToRemoveFromVisualTree.Contains(child))
-                    {
-                        //we want to move the element instead of recreating it:
-                        elementsToRemoveFromVisualTree.Remove(child);
-                        INTERNAL_VisualTreeManager.MoveVisualChildInSameParent(child, this, newIndex + indexInNewChildren - itemsMoved);
-                        if(compensateMovedItems)
-                        {
-                            ++itemsMoved;
-                        }
-                    }
-                    else
-                    {
-#if REWORKLOADED
-                        this.AddVisualChild(child, newIndex + indexInNewChildren - itemsMoved);
-#else
-                        INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(child, this, newIndex + indexInNewChildren - itemsMoved);
-#endif
-                    }
-                    ++indexInNewChildren;
-                }
-            }
+//            if (action == NotifyCollectionChangedAction.Move && newChildren == null)
+//            {
+//                //We need to do this because in the case of a move action, only the indexes and oldChildren are set and it doesn't fit with the logic of this method.
+//                newChildren = oldChildren;
+//            }
+//            bool compensateMovedItems = false;
+//            HashSet<UIElement> elementsToRemoveFromVisualTree = null;
+//            if (oldChildren != null)
+//            {
+//                if (newIndex > oldIndex && oldIndex > -1)
+//                {
+//                    compensateMovedItems = true;
+//                    newIndex += oldChildren.Count; //this is to compensate the fact that newIndex is the index after removing the oldChildren.
+//                }
+//                elementsToRemoveFromVisualTree = new HashSet<UIElement>();
+//                foreach (UIElement uiE in oldChildren)
+//                {
+//                    elementsToRemoveFromVisualTree.Add(uiE);
+//                }
+//            }
+//            else
+//            {
+//                elementsToRemoveFromVisualTree = new HashSet<UIElement>();
+//            }
+//            if (newChildren != null)
+//            {
+//                int indexInNewChildren = 0;
+//                int itemsMoved = 0; //Note: this is used to compensate the fact that the items were moved from a previous index to a further one so there are still the same amount of elements before the element that was 
+//                foreach (UIElement child in newChildren)
+//                {
+//                    if(elementsToRemoveFromVisualTree.Contains(child))
+//                    {
+//                        //we want to move the element instead of recreating it:
+//                        elementsToRemoveFromVisualTree.Remove(child);
+//                        INTERNAL_VisualTreeManager.MoveVisualChildInSameParent(child, this, newIndex + indexInNewChildren - itemsMoved);
+//                        if(compensateMovedItems)
+//                        {
+//                            ++itemsMoved;
+//                        }
+//                    }
+//                    else
+//                    {
+//#if REWORKLOADED
+//                        this.AddVisualChild(child, newIndex + indexInNewChildren - itemsMoved);
+//#else
+//                        INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(child, this, newIndex + indexInNewChildren - itemsMoved);
+//#endif
+//                    }
+//                    ++indexInNewChildren;
+//                }
+//            }
 
-            foreach(UIElement child in elementsToRemoveFromVisualTree)
-            {
-                INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(child, this);
-            }
-        }
+//            foreach(UIElement child in elementsToRemoveFromVisualTree)
+//            {
+//                INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(child, this);
+//            }
+//        }
 
         private async void ProgressivelyAttachChildren(IList newChildren)
         {
@@ -330,7 +422,7 @@ namespace Windows.UI.Xaml.Controls
         }
 
 
-        #endregion
+#endregion
 
 
 

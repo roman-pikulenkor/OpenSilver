@@ -768,6 +768,107 @@ namespace Windows.UI.Xaml.Controls
 #endif
         }
 
+        internal override void OnChildrenAdded(UIElement newChild, int index)
+        {
+            if (!Grid_InternalHelpers.isCSSGridSupported())
+            {
+                if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this))
+                {
+                    this.UpdateStructureWhenAddingChild(newChild);
+#if REWORKLOADED
+                    this.AddVisualChild(newChild, index);
+#else
+                    INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(child, this, index);
+#endif
+                    this.LocallyManageChildrenChanged();
+                }
+            }
+            else
+            {
+                base.OnChildrenAdded(newChild, index);
+                this.LocallyManageChildrenChanged();
+            }
+        }
+
+        internal override void OnChildrenRemoved(UIElement oldChild, int index)
+        {
+            if (!Grid_InternalHelpers.isCSSGridSupported())
+            {
+                if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this))
+                {
+                    this.UpdateStructureWhenRemovingChild(oldChild);
+                    INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(oldChild, this);
+                    this.LocallyManageChildrenChanged();
+                }
+            }
+            else
+            {
+                base.OnChildrenRemoved(oldChild, index);
+                this.LocallyManageChildrenChanged();
+            }
+        }
+
+        internal override void OnChildrenReplaced(UIElement oldChild, UIElement newChild, int index)
+        {
+            if (oldChild == newChild)
+            {
+                return;
+            }
+
+            if (!Grid_InternalHelpers.isCSSGridSupported())
+            {
+                this.UpdateStructureWhenRemovingChild(oldChild);
+                INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(oldChild, this);
+
+                this.UpdateStructureWhenAddingChild(newChild);
+#if REWORKLOADED
+                this.AddVisualChild(newChild, index);
+#else
+                INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(child, this, index);
+#endif
+
+                this.LocallyManageChildrenChanged();
+            }
+            else
+            {
+                base.OnChildrenReplaced(oldChild, newChild, index);
+                this.LocallyManageChildrenChanged();
+            }
+        }
+
+        internal override void OnChildrenReset()
+        {
+            if (!Grid_InternalHelpers.isCSSGridSupported())
+            {
+                if (this.INTERNAL_VisualChildrenInformation != null)
+                {
+                    foreach (var childInfo in this.INTERNAL_VisualChildrenInformation.Select(kp => kp.Value).ToArray())
+                    {
+                        UpdateStructureWhenRemovingChild(childInfo.INTERNAL_UIElement);
+                        INTERNAL_VisualTreeManager.DetachVisualChildIfNotNull(childInfo.INTERNAL_UIElement, this);
+                    }
+                }
+
+                for (int i = 0; i < this.Children.Count; ++i)
+                {
+                    this.UpdateStructureWhenAddingChild(this.Children[i]);
+#if REWORKLOADED
+                    this.AddVisualChild(this.Children[i], i);
+#else
+                    INTERNAL_VisualTreeManager.AttachVisualChildIfNotAlreadyAttached(this.Children[i], this, i);
+#endif
+                }
+
+                this.LocallyManageChildrenChanged();
+            }
+            else
+            {
+                base.OnChildrenReset();
+                this.LocallyManageChildrenChanged();
+            }
+        }
+
+#if false
         internal override void ManageChildrenChanged(IList oldChildren, IList newChildren)
         {
             //todo: remove this method? I'm not sure that it's called anymore
@@ -809,6 +910,7 @@ namespace Windows.UI.Xaml.Controls
                 this.LocallyManageChildrenChanged();
             }
         }
+#endif
 
         public override dynamic GetDomElementWhereToPlaceChild(UIElement child)
         {

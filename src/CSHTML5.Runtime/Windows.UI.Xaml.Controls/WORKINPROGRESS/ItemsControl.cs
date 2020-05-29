@@ -339,8 +339,7 @@ namespace Windows.UI.Xaml.Controls
 
         protected virtual void ManageCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
-            //this.UpdateChildrenInVisualTree(e); //uncomment once we support inserting children in dom at any index (rather than the end)
-            this.UpdateChildrenInVisualTree(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            this.HandleItemsChanged(e);
         }
 
         protected virtual void UpdateItemsPanel(ItemsPanelTemplate newTemplate)
@@ -359,11 +358,11 @@ namespace Windows.UI.Xaml.Controls
             {
                 this.UpdateItemsPanel(this.ItemsPanel);
             }
-            else
-            {
-                //we set the new Items (which will refresh the display)
-                this.UpdateChildrenInVisualTree(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-            }
+            //else
+            //{
+            //    //we set the new Items (which will refresh the display)
+            //    this.UpdateChildrenInVisualTree(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+            //}
         }
 
         protected virtual void OnItemsSourceChanged_BeforeVisualUpdate(IEnumerable oldValue, IEnumerable newValue)
@@ -544,6 +543,73 @@ namespace Windows.UI.Xaml.Controls
                 return ItemContainerGenerator.INTERNAL_TryUnregisterContainer(containerIfAny, item);
             }
             return false;
+        }
+
+        private FrameworkElement CreateContainerFromItem(object item)
+        {
+            FrameworkElement newContent = GenerateFrameworkElementToRenderTheItem(item);
+
+            ContentControl containerIfAny = GetContainerFromItem(item) as ContentControl;
+
+            if (containerIfAny == null)
+            {
+                //-------------------------------------------------------
+                // If we arrive here, it means that there is no container
+                // to be generated, such as in a standard ItemsControl.
+                //-------------------------------------------------------
+
+                // We remember the new content (it may be a DataTemplate 
+                // for example), so that we can later remove it by finding 
+                // it in the "_itemContainerGenerator" collection based on 
+                // the business object "item"
+                this.ItemContainerGenerator.INTERNAL_RegisterContainer(newContent, item);
+
+                return newContent;
+            }
+            else
+            {
+                //-------------------------------------------------------
+                // If we arrive here, it means that either the newContent 
+                // is already a container (of the correct type), or a new 
+                // container was generated.
+                //-------------------------------------------------------
+
+                containerIfAny.DataContext = item;
+
+                //if the user defined a style for the container, 
+                // we apply it
+                containerIfAny.Style = this.ItemContainerStyle;
+
+                if (containerIfAny == newContent)
+                {
+                    //---------------------------------------------------
+                    // If we arrive here, it means that the newContent is
+                    // already a container (of the correct type). For 
+                    // example, this happens if the user adds a 
+                    // ListBoxItem to a ListBox.
+                    //---------------------------------------------------
+
+                    // (Nothing to do)
+                }
+                else
+                {
+                    //---------------------------------------------------
+                    // If we arrive here, it means a container was 
+                    // generated. For example, when the user adds an 
+                    // object to a ListBox, a ListBoxItem container is 
+                    // generated.
+                    //---------------------------------------------------
+
+                    // We put the content into the container
+                    containerIfAny.Content = newContent;
+                }
+
+                // We register the container so that later we can
+                // find it back, given the "item"
+                this.ItemContainerGenerator.INTERNAL_RegisterContainer(containerIfAny, item);
+
+                return containerIfAny;
+            }
         }
 
         protected virtual void AddChildItemToVisualTree(object item)
@@ -739,6 +805,45 @@ namespace Windows.UI.Xaml.Controls
         #endregion Internal Properties
 
         #region Internal Methods
+
+        internal void HandleItemsChanged(NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Reset:
+                    if (this.RenderedItemsPanel != null)
+                    {
+                        this.RenderedItemsPanel.Children.Clear();
+                        foreach (var item in this.Items)
+                        {
+                            this.RenderedItemsPanel.Children.Add(this.CreateContainerFromItem(item));
+                        }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Add:
+                    FrameworkElement newChild = this.CreateContainerFromItem(e.NewItems[0]);
+                    if (this.RenderedItemsPanel != null)
+                    {
+                        this.RenderedItemsPanel.Children.Insert(e.NewStartingIndex, newChild);
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    if (this.RenderedItemsPanel != null)
+                    {
+                        this.RenderedItemsPanel.Children.RemoveAt(e.OldStartingIndex);
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    FrameworkElement newItem = this.CreateContainerFromItem(e.NewItems[0]);
+                    if (this.RenderedItemsPanel != null)
+                    {
+                        this.RenderedItemsPanel.Children[e.OldStartingIndex] = newItem;
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException(string.Format("Unexpected collection change action '{0}'.", e.Action));
+            }
+        }
 
         internal void UpdateChildrenInVisualTree(NotifyCollectionChangedEventArgs e)
         {
