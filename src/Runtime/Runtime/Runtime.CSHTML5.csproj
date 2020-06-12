@@ -769,6 +769,7 @@
     <Compile Include="Windows.UI.Xaml\CornerRadiusConverter.cs" />
     <Compile Include="Windows.UI.Xaml\CSSEquivalent.cs" />
     <Compile Include="Windows.UI.Xaml\DataTemplate.cs" />
+    <Compile Include="Windows.UI.Xaml\DataTemplateKey.cs" />
     <Compile Include="Windows.UI.Xaml\DependencyObject.cs" />
     <Compile Include="Windows.UI.Xaml\DependencyProperty.cs" />
     <Compile Include="Windows.UI.Xaml\DependencyPropertyChangedEventArgs.cs" />

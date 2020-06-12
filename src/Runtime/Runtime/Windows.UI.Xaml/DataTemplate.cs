@@ -14,13 +14,6 @@
 
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-#if !MIGRATION
-using Windows.UI.Xaml.Controls;
-#endif
 
 #if MIGRATION
 namespace System.Windows
@@ -33,18 +26,74 @@ namespace Windows.UI.Xaml
     /// </summary>
     public partial class DataTemplate : FrameworkTemplate
     {
+        private Type _dataType;
+
         /// <summary>
         /// Initializes a new instance of the DataTemplate class.
         /// </summary>
-        public DataTemplate() : base() { }
+        public DataTemplate()
+        {
+
+        }
 
         /// <summary>
-        /// Creates the System.Windows.UIElement objects in the System.Windows.DataTemplate.
+        /// Initializes a new instance of the DataTemplate class.
         /// </summary>
-        /// <returns>The root System.Windows.UIElement of the System.Windows.DataTemplate.</returns>
+        public DataTemplate(object dataType)
+        {
+            this.DataType = dataType as Type;
+        }
+
+        /// <summary>
+        /// Creates the UIElement objects in the DataTemplate./>.
+        /// </summary>
+        /// <returns>
+        /// The root UIElement of the DataTemplate.
+        /// </returns>
         public DependencyObject LoadContent()
         {
             return this.INTERNAL_InstantiateFrameworkTemplate();
         }
+
+        /// <summary>
+        /// Gets or sets the type for which this <see cref="DataTemplate"/> is intended.
+        /// </summary>
+        /// <returns>
+        /// The type of object to which this template is applied.
+        /// </returns>
+        /// <exception cref="ArgumentException">
+        /// When setting this property, the specified value is not of type <see cref="Type"/>.
+        /// </exception>
+        public Type DataType
+        {
+            get
+            {
+                return this._dataType;
+            }
+            set
+            {
+#if MIGRATION
+                Exception ex = System.Windows.DataTemplateKey.ValidateDataType(value, "value");
+#else
+                Exception ex = Windows.UI.Xaml.DataTemplateKey.ValidateDataType(value, "value");
+#endif
+                if (ex != null)
+                {
+                    throw ex;
+                }
+
+                this._dataType = value;
+            }
+        }
+
+        public object DataTemplateKey 
+        { 
+            get
+            {
+                return this.DataType != null ? 
+                       new DataTemplateKey(this.DataType) : 
+                       null;
+            } 
+        } 
     }
 }
