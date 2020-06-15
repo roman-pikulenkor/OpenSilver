@@ -724,10 +724,10 @@ namespace Windows.UI.Xaml
             bool shouldInvalidate = this.IsInitialized;
             bool hasImplicitStyles = info.IsResourceAddOperation && this.HasImplicitStyles;
 
-            //if (shouldInvalidate && InvalidatesImplicitDataTemplateResources)
-            //{
-            //    info.SetIsImplicitDataTemplateChange();
-            //}
+            if (shouldInvalidate && InvalidatesImplicitDataTemplateResources)
+            {
+                info.SetIsImplicitDataTemplateChange();
+            }
 
             if (shouldInvalidate || hasImplicitStyles)
             {
@@ -1182,12 +1182,11 @@ namespace Windows.UI.Xaml
         // Sets the HasImplicitDataTemplates flag if the given key is of type DataTemplateKey.
         private void UpdateHasImplicitDataTemplates(object key)
         {
-            // todo: implement this when implicit DataTemplates are supported (and DataTemplateKey)
-            //// Update the HasImplicitDataTemplates flag
-            //if (!HasImplicitDataTemplates)
-            //{
-            //    HasImplicitDataTemplates = (key is DataTemplateKey);
-            //}
+            // Update the HasImplicitDataTemplates flag
+            if (!HasImplicitDataTemplates)
+            {
+                HasImplicitDataTemplates = (key is DataTemplateKey);
+            }
         }
 
         private bool IsInitialized
@@ -1236,6 +1235,19 @@ namespace Windows.UI.Xaml
             get { return ReadPrivateFlag(PrivateFlags.HasImplicitDataTemplates); }
             set { WritePrivateFlag(PrivateFlags.HasImplicitDataTemplates, value); }
         }
+
+        /// <summary>
+        ///     Gets or sets a value indicating whether the invalidations fired
+        ///     by the ResourceDictionary when an implicit data template resource
+        ///     changes will cause ContentPresenters to re-evaluate their choice
+        ///     of template.
+        /// </summary>
+        internal bool InvalidatesImplicitDataTemplateResources
+        {
+            get { return ReadPrivateFlag(PrivateFlags.InvalidatesImplicitDataTemplateResources); }
+            set { WritePrivateFlag(PrivateFlags.InvalidatesImplicitDataTemplateResources, value); }
+        }
+
 
         private void WritePrivateFlag(PrivateFlags bit, bool value)
         {
@@ -1311,7 +1323,7 @@ namespace Windows.UI.Xaml
             IsThemeDictionary = 0x08,
             HasImplicitStyles = 0x10,
             CanBeAccessedAcrossThreads = 0x20, // unused
-            InvalidatesImplicitDataTemplateResources = 0x40, // Unused
+            InvalidatesImplicitDataTemplateResources = 0x40,
             HasImplicitDataTemplates = 0x80,
         }
 

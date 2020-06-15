@@ -38,7 +38,7 @@ namespace Windows.UI.Xaml
             this._methodToInstantiateFrameworkTemplate = (control) =>
             {
                 ContentPresenter presenter = new ContentPresenter();
-                presenter.SetBinding(ContentControl.ContentProperty, new Binding());
+                presenter.SetBinding(ContentPresenter.ContentProperty, new Binding(""));
                 return new TemplateInstance()
                 {
                     TemplateContent = presenter,

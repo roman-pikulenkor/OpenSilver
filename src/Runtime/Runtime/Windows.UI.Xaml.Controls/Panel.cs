@@ -322,23 +322,13 @@ namespace Windows.UI.Xaml.Controls
 
         #endregion
 
-
-
-        //internal override void INTERNAL_Render()
-        //{
-        //    base.INTERNAL_Render();
-
-        //    if (Background is SolidColorBrush)
-        //    {
-        //        INTERNAL_HtmlDomManager.GetFrameworkElementOuterStyleForModification(this).backgroundColor = ((SolidColorBrush)Background).Color.INTERNAL_ToHtmlString();
-        //    }
-        //}
-
         public static readonly DependencyProperty IsItemsHostProperty =
-    DependencyProperty.Register("IsItemsHost",
-                                typeof(bool),
-                                typeof(Panel),
-                                new PropertyMetadata(false));
+            DependencyProperty.Register(
+                "IsItemsHost",
+                typeof(bool),
+                typeof(Panel),
+                new PropertyMetadata(false));
+
         public bool IsItemsHost
         {
             get { return (bool)this.GetValue(IsItemsHostProperty); }

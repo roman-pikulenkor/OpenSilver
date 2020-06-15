@@ -135,7 +135,7 @@ namespace Windows.UI.Xaml.Controls
             get { return AlternatingRowBackground; }
             set { AlternatingRowBackground = value; }
         }
-       
+
         /// <summary>
         /// Gets or sets the alternative bakground color of the Items that are not selected.
         /// </summary>
@@ -656,28 +656,26 @@ namespace Windows.UI.Xaml.Controls
             {
                 if (_itemsPanelTemplate == null)
                 {
-                    _itemsPanelTemplate = new ItemsPanelTemplate()
+                    _itemsPanelTemplate = new ItemsPanelTemplate();
+                    _itemsPanelTemplate._methodToInstantiateFrameworkTemplate = (FrameworkElement templateOwner) =>
                     {
-                        _methodToInstantiateFrameworkTemplate = (Control templateOwner) =>
+                        Grid grid = new Grid();
+
+                        // Row for DataGrid content
+                        RowDefinition row1 = new RowDefinition();
+                        row1.Height = new GridLength(1d, GridUnitType.Star);
+
+                        // Row for DataPager
+                        RowDefinition row2 = new RowDefinition();
+                        row2.Height = new GridLength(1d, GridUnitType.Auto);
+
+                        grid.RowDefinitions.Add(row1);
+                        grid.RowDefinitions.Add(row2);
+
+                        return new TemplateInstance()
                         {
-                            Grid grid = new Grid();
-
-                            // Row for DataGrid content
-                            RowDefinition row1 = new RowDefinition();
-                            row1.Height = new GridLength(1d, GridUnitType.Star);
-                            
-                            // Row for DataPager
-                            RowDefinition row2 = new RowDefinition();
-                            row2.Height = new GridLength(1d, GridUnitType.Auto);
-
-                            grid.RowDefinitions.Add(row1);
-                            grid.RowDefinitions.Add(row2);
-
-                            return new TemplateInstance()
-                            {
-                                TemplateContent = grid,
-                            };
-                        }
+                            TemplateContent = grid,
+                        };
                     };
 
                     // Note: We seal the template in order to avoid letting the user modify the 
@@ -774,7 +772,7 @@ namespace Windows.UI.Xaml.Controls
                     columnHeader.HorizontalContentAlignment = HorizontalAlignment.Center;
                     columnHeader.VerticalContentAlignment = VerticalAlignment.Center;
                     columnHeader.FontWeight = FontWeights.Bold;
-                    if(!double.IsNaN(ColumnHeaderHeight))
+                    if (!double.IsNaN(ColumnHeaderHeight))
                     {
                         columnHeader.Height = ColumnHeaderHeight;
                     }
@@ -1009,7 +1007,7 @@ namespace Windows.UI.Xaml.Controls
                     {
                         cell.Style = column.CellStyle;
                     }
-                    else if(CellStyle != null)
+                    else if (CellStyle != null)
                     {
                         cell.Style = CellStyle;
                     }
@@ -1423,8 +1421,8 @@ namespace Windows.UI.Xaml.Controls
         }
 
         protected virtual void UpdateChildrenInVisualTree(
-            IEnumerable oldChildrenEnumerable, 
-            IEnumerable newChildrenEnumerable, 
+            IEnumerable oldChildrenEnumerable,
+            IEnumerable newChildrenEnumerable,
             bool forceUpdateAllChildren = false) // "forceUpdateAllChildren" is used to remove all the children and add them back, for example when the ItemsPanel changes.
         {
             if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this) && ItemsHost != null)

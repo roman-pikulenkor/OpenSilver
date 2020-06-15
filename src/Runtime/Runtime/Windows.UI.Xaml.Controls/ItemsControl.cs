@@ -144,7 +144,7 @@ namespace Windows.UI.Xaml.Controls
         {
             ItemsPanelTemplate template = new ItemsPanelTemplate()
             {
-                _methodToInstantiateFrameworkTemplate = (Control templateOwner) =>
+                _methodToInstantiateFrameworkTemplate = (FrameworkElement templateOwner) =>
                 {
                     return new TemplateInstance()
                     {

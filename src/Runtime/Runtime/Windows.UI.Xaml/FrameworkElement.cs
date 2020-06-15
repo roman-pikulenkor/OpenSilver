@@ -1146,6 +1146,77 @@ namespace Windows.UI.Xaml
         }
         #endregion
 
+        #region Visual States
+
+        internal INTERNAL_VisualStateGroupCollection _visualStateGroups;
+        public INTERNAL_VisualStateGroupCollection INTERNAL_GetVisualStateGroups()
+        {
+            if (_visualStateGroups == null)
+            {
+                _visualStateGroups = new INTERNAL_VisualStateGroupCollection();
+            }
+            return _visualStateGroups;
+        }
+
+#if BRIDGE
+        // find "COMMENT 26.03.2020" at the beginning of the Control.cs file for the reason of the existence of the method below:
+        private INTERNAL_VisualStateGroupCollection iNTERNAL_GetVisualStateGroups()
+        {
+            return INTERNAL_GetVisualStateGroups();
+        }
+#endif
+
+        #endregion Visual States
+
+        #region INameScope implementation
+        //note: copy from UserControl
+        Dictionary<string, object> _nameScopeDictionary = new Dictionary<string, object>();
+
+        /// <summary>
+        /// Finds the UIElement with the specified name. Returns null if not found.
+        /// </summary>
+        /// <param name="name">The name to look for.</param>
+        /// <returns>The object with the specified name if any; otherwise null.</returns>
+        internal object TryFindTemplateChildFromName(string name)
+        {
+            //todo: see if this fits to the behaviour it should have.
+            if (_nameScopeDictionary.ContainsKey(name))
+                return _nameScopeDictionary[name];
+            else
+                return null;
+        }
+
+        public void RegisterName(string name, object scopedElement)
+        {
+            if (_nameScopeDictionary.ContainsKey(name) && _nameScopeDictionary[name] != scopedElement)
+                throw new ArgumentException(string.Format("Cannot register duplicate name '{0}' in this scope.", name));
+
+            _nameScopeDictionary[name] = scopedElement;
+        }
+
+#if BRIDGE
+        // find "COMMENT 26.03.2020" at the beginning of the Control.cs file for the reason of the existence of the method below:
+        private void registerName(string name, object scopedElement)
+        {
+            RegisterName(name, scopedElement);
+        }
+#endif
+
+        public void UnregisterName(string name)
+        {
+            if (!_nameScopeDictionary.ContainsKey(name))
+                throw new ArgumentException(string.Format("Name '{0}' was not found.", name));
+
+            _nameScopeDictionary.Remove(name);
+        }
+
+        internal void ClearRegisteredNames()
+        {
+            _nameScopeDictionary.Clear();
+        }
+
+        #endregion INameScope implementation
+
 #if REWORKLOADED
         internal override void INTERNAL_FinalizeAttachToParent()
         {

@@ -98,7 +98,15 @@ namespace DotNetForHtml5.Compiler
                             string storyboardsAdditionalCode = string.Join("\r\n", GetListThatContainsAdditionalCodeFromDictionary(elementThatIsRootOfTheCurrentNamescope, namescopeRootToStoryboardsAdditionalCode));
                             string additionalCodeToPlaceAtTheEndOfTheMethod = markupExtensionsAdditionalCode + Environment.NewLine + storyboardsAdditionalCode;
 
-                            string dataTemplateMethod = CreateDataTemplateLambda(codeToInstantiateTheDataTemplate, frameworkTemplateUniqueName, childUniqueName, templateInstanceUniqueName, objectsToInstantiateAtTheBeginningOfTheDataTemplate, additionalCodeToPlaceAtTheEndOfTheMethod, namespaceSystemWindows);
+                            string dataTemplateMethod = CreateDataTemplateLambda(
+                                codeToInstantiateTheDataTemplate, 
+                                frameworkTemplateUniqueName, 
+                                childUniqueName, 
+                                templateInstanceUniqueName, 
+                                objectsToInstantiateAtTheBeginningOfTheDataTemplate, 
+                                additionalCodeToPlaceAtTheEndOfTheMethod, 
+                                namespaceSystemWindows);
+
                             // Create the code that sets the "MethodToInstantiateDataTemplate":
                             string codeToSetTheMethod = string.Format("{0}.SetMethodToInstantiateFrameworkTemplate({1});", frameworkTemplateUniqueName, dataTemplateMethod);
                             codeStack.Push(codeToSetTheMethod); // Note: the codeStack at this point normally contains the code of the children. In this case we use the codeStack for a different purpose, but it fits well because the parent element expects each child to have added some code to the Stack.
@@ -628,7 +636,12 @@ namespace DotNetForHtml5.Compiler
                                         {
                                             if (!isFirstPass) // We ignore this during the first pass because the DLL has no been compiled yet so we don't have access to all the types.
                                             {
-                                                stringBuilder.AppendLine(string.Format("templateOwner_{0}.RegisterName(\"{1}\", {2});", GetUniqueName(elementThatIsRootOfTheCurrentNamescope), name, elementUniqueNameOrThisKeyword));
+                                                stringBuilder.AppendLine(
+                                                    string.Format(
+                                                        "templateOwner_{0}.RegisterName(\"{1}\", {2});", 
+                                                        GetUniqueName(elementThatIsRootOfTheCurrentNamescope), 
+                                                        name, 
+                                                        elementUniqueNameOrThisKeyword));
                                                 //resultingFindNameCalls.Add(string.Format("{0} = {1};", name, elementUniqueNameOrThisKeyword));
                                             }
                                         }

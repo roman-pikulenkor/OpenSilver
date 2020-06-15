@@ -57,7 +57,7 @@ namespace Windows.UI.Xaml.Controls
         internal int _rowIndex; //todo: replace this with the method GetIndex? (see wpf)
         private DataGridSelectionMode _currentSelectionMode;
 
-        internal static DataTemplate DefaultTemplateForExtendedSelectionMode = new DataTemplate() { _methodToInstantiateFrameworkTemplate = GenerateDefaultHeaderTemplateForExtendedSelectionMode };
+        internal static DataTemplate DefaultTemplateForExtendedSelectionMode;
 
 #if MIGRATION
         public event MouseButtonEventHandler MouseLeftButtonUp;
@@ -65,8 +65,14 @@ namespace Windows.UI.Xaml.Controls
         public event PointerEventHandler MouseLeftButtonUp;
 #endif
 
+        static DataGridRow()
+        {
+            DefaultTemplateForExtendedSelectionMode = new DataTemplate();
+            DefaultTemplateForExtendedSelectionMode._methodToInstantiateFrameworkTemplate = GenerateDefaultHeaderTemplateForExtendedSelectionMode;
+        }
+
         //this allows us to generate a header to allow selection (and most importantly deselection) of elements in the Grid.
-        private static TemplateInstance GenerateDefaultHeaderTemplateForExtendedSelectionMode(Control templateOwner = null) //The TemplateOwner parameter is made necessary by ControlTemplates but can be kept at null in DataTemplate.
+        private static TemplateInstance GenerateDefaultHeaderTemplateForExtendedSelectionMode(FrameworkElement templateOwner = null) //The TemplateOwner parameter is made necessary by ControlTemplates but can be kept at null in DataTemplate.
         {
             TemplateInstance templateInstance = new TemplateInstance();
             templateInstance.TemplateOwner = templateOwner;

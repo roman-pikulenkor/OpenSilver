@@ -1,5 +1,5 @@
-﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="../DefaultStyles/INTERNAL_DefaultAutoCompleteBoxStyle.xaml" />
         <ResourceDictionary Source="../DefaultStyles/INTERNAL_DefaultButtonStyle.xaml" />
@@ -24,5 +24,6 @@
         <ResourceDictionary Source="../DefaultStyles/INTERNAL_DefaultViewboxStyle.xaml" />
         <ResourceDictionary Source="../DefaultStyles/INTERNAL_DefaultRepeatButtonStyle.xaml" />
         <ResourceDictionary Source="../DefaultStyles/INTERNAL_DefaultItemsControlStyle.xaml" />
+        <ResourceDictionary Source="../DefaultStyles/INTERNAL_DefaultContentControlStyle.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>
