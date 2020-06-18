@@ -85,6 +85,11 @@ namespace Windows.UI.Xaml.Media
             this.SetItemInternal(index, value);
         }
 
+        internal override PresentationFrameworkCollection<double> CreateInstanceOverride()
+        {
+            return new DoubleCollection();
+        }
+
         #endregion
 
         internal static object INTERNAL_ConvertFromString(string doubleCollectionAsString)

@@ -62,6 +62,11 @@ namespace Windows.UI.Xaml.Controls
 
         #region Overriden Methods
 
+        internal override PresentationFrameworkCollection<RowDefinition> CreateInstanceOverride()
+        {
+            return new RowDefinitionCollection();
+        }
+
         internal override void AddOverride(RowDefinition value)
         {
             this.CheckReentrancy();

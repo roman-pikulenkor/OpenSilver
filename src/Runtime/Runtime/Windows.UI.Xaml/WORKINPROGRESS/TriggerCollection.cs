@@ -25,6 +25,11 @@ namespace Windows.UI.Xaml
 #if WORKINPROGRESS
     public sealed partial class TriggerCollection : PresentationFrameworkCollection<TriggerBase>
     {
+        internal override PresentationFrameworkCollection<TriggerBase> CreateInstanceOverride()
+        {
+            return new TriggerCollection();
+        }
+
         internal override void AddOverride(TriggerBase value)
         {
             this.AddDependencyObjectInternal(value);

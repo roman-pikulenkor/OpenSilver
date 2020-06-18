@@ -71,6 +71,11 @@ namespace Windows.UI.Xaml.Media
 
         #region Overriden Methods
 
+        internal override PresentationFrameworkCollection<Point> CreateInstanceOverride()
+        {
+            return new PointCollection();
+        }
+
         internal override void AddOverride(Point point)
         {
             this.AddInternal(point);

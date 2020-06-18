@@ -32,6 +32,11 @@ namespace Windows.UI.Xaml.Media
 #endif
     {
 #if WORKINPROGRESS
+        internal override PresentationFrameworkCollection<Transform> CreateInstanceOverride()
+        {
+            return new TransformCollection();
+        }
+
         internal override void AddOverride(Transform value)
         {
             this.AddDependencyObjectInternal(value);

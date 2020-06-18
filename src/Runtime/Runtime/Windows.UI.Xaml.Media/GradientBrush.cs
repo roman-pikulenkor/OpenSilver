@@ -19,6 +19,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Markup;
+using CSHTML5.Internal;
 
 #if MIGRATION
 namespace System.Windows.Media
@@ -51,8 +52,32 @@ namespace Windows.UI.Xaml.Media
         //public static readonly DependencyProperty ColorInterpolationModeProperty =
         //    DependencyProperty.Register("ColorInterpolationMode", typeof(ColorInterpolationMode), typeof(GradientBrush), new PropertyMetadata(null));
 
+#if WORKINPROGRESS
 
+        /// <summary>
+        /// Gets or sets the brush's gradient stops, which is a collection of the GradientStop
+        /// objects associated with the brush, each of which specifies a color and an offset
+        /// along the brush's gradient axis. The default is an empty GradientStopCollection.
+        /// </summary>
+        public GradientStopCollection GradientStops
+        {
+            get { return (GradientStopCollection)GetValue(GradientStopsProperty); }
+            set { SetValue(GradientStopsProperty, value); }
+        }
 
+        /// <summary>
+        /// Identifies the GradientStops dependency property.
+        /// </summary>
+        public static readonly DependencyProperty GradientStopsProperty =
+            DependencyProperty.Register("GradientStops", 
+                                        typeof(GradientStopCollection), 
+                                        typeof(GradientBrush), 
+                                        new PropertyMetadata(new PresentationFrameworkCollectionDefaultValueFactory<GradientStop>(new GradientStopCollection()), 
+                                                             OnGradientStopsChanged) 
+                                        { 
+                                            CallPropertyChangedWhenLoadedIntoVisualTree = WhenToCallPropertyChangedEnum.IfPropertyIsSet 
+                                        });
+#else
         /// <summary>
         /// Gets or sets the brush's gradient stops, which is a collection of the GradientStop
         /// objects associated with the brush, each of which specifies a color and an offset
@@ -62,26 +87,29 @@ namespace Windows.UI.Xaml.Media
         {
             get
             {
-                GradientStopCollection collection = (GradientStopCollection)GetValue(GradientStopsProperty);
-                if (collection == null)
+                GradientStopCollection gradientStops = (GradientStopCollection)this.GetValue(GradientStopsProperty);
+                if (gradientStops == null)
                 {
-                    collection = new GradientStopCollection();
-                    SetValue(GradientStopsProperty, collection);
+                    gradientStops = new GradientStopCollection();
+                    this.SetValue(GradientStopsProperty, gradientStops);
                 }
-                return collection;
+                return gradientStops;
             }
-            set
-            {
-                SetValue(GradientStopsProperty, value);
-            }
+            set { SetValue(GradientStopsProperty, value); }
         }
 
         /// <summary>
         /// Identifies the GradientStops dependency property.
         /// </summary>
         public static readonly DependencyProperty GradientStopsProperty =
-            DependencyProperty.Register("GradientStops", typeof(GradientStopCollection), typeof(GradientBrush), new PropertyMetadata(null, OnGradientStopsChanged)
-            { CallPropertyChangedWhenLoadedIntoVisualTree = WhenToCallPropertyChangedEnum.IfPropertyIsSet });
+            DependencyProperty.Register("GradientStops", 
+                                        typeof(GradientStopCollection), 
+                                        typeof(GradientBrush), 
+                                        new PropertyMetadata(null, OnGradientStopsChanged) 
+                                        { 
+                                            CallPropertyChangedWhenLoadedIntoVisualTree = WhenToCallPropertyChangedEnum.IfPropertyIsSet 
+                                        });
+#endif
 
         private static void OnGradientStopsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

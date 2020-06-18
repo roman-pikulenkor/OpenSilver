@@ -117,6 +117,11 @@ namespace Windows.UI.Xaml
             this.SetItemInternal(index, value);
         }
 
+        internal override PresentationFrameworkCollection<SetterBase> CreateInstanceOverride()
+        {
+            throw new NotImplementedException("The method or operation is not implemented.");
+        }
+
         #endregion
 
         #region Internal Methods

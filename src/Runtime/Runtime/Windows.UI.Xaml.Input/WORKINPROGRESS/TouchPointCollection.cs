@@ -48,6 +48,11 @@ namespace Windows.UI.Xaml.Input
         {
             this.SetItemInternal(index, value);
         }
+
+        internal override PresentationFrameworkCollection<TouchPoint> CreateInstanceOverride()
+        {
+            return new TouchPointCollection();
+        }
     }
 }
 #endif

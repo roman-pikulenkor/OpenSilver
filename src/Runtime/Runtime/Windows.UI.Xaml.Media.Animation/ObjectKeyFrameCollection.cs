@@ -37,6 +37,11 @@ namespace Windows.UI.Xaml.Media.Animation
 #endif
     {
 #if WORKINPROGRESS
+        internal override PresentationFrameworkCollection<ObjectKeyFrame> CreateInstanceOverride()
+        {
+            return new ObjectKeyFrameCollection();
+        }
+
         internal override void AddOverride(ObjectKeyFrame keyFrame)
         {
             this.AddDependencyObjectInternal(keyFrame);

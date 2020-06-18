@@ -31,6 +31,11 @@ namespace Windows.UI.Xaml.Media
 {
     public sealed partial class GeometryCollection : PresentationFrameworkCollection<Geometry>
     {
+        internal override PresentationFrameworkCollection<Geometry> CreateInstanceOverride()
+        {
+            return new GeometryCollection();
+        }
+
         internal override void AddOverride(Geometry value)
         {
             this.AddDependencyObjectInternal(value);

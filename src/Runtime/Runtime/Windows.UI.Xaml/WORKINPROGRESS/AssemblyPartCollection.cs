@@ -29,6 +29,11 @@ namespace Windows.UI.Xaml
 {
     public sealed partial class AssemblyPartCollection : PresentationFrameworkCollection<AssemblyPart>
     {
+        internal override PresentationFrameworkCollection<AssemblyPart> CreateInstanceOverride()
+        {
+            return new AssemblyPartCollection();
+        }
+
         internal override void AddOverride(AssemblyPart value)
         {
             this.AddDependencyObjectInternal(value);

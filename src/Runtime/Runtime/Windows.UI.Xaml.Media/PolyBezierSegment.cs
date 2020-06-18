@@ -58,16 +58,7 @@ namespace Windows.UI.Xaml.Media
         /// </summary>
         public PointCollection Points
         {
-            get
-            {
-                PointCollection points = (PointCollection)GetValue(PointsProperty);
-                if (points == null)
-                {
-                    points = new PointCollection();
-                    SetValue(PointsProperty, points);
-                }
-                return points;
-            }
+            get { return (PointCollection)GetValue(PointsProperty); }
             set { SetValue(PointsProperty, value); }
         }
 
@@ -75,7 +66,11 @@ namespace Windows.UI.Xaml.Media
         /// Identifies the Points dependency property.
         /// </summary>
         public static readonly DependencyProperty PointsProperty =
-            DependencyProperty.Register("Points", typeof(PointCollection), typeof(PolyBezierSegment), new PropertyMetadata(null, Points_Changed));
+            DependencyProperty.Register("Points", 
+                                        typeof(PointCollection), 
+                                        typeof(PolyBezierSegment), 
+                                        new PropertyMetadata(new PresentationFrameworkCollectionDefaultValueFactory<Point>(new PointCollection()), 
+                                                             Points_Changed));
 
         private static void Points_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

@@ -47,6 +47,11 @@ namespace Windows.UI.Xaml.Media
             }
         }
 
+        internal override PresentationFrameworkCollection<GradientStop> CreateInstanceOverride()
+        {
+            return new GradientStopCollection();
+        }
+
         internal override void AddOverride(GradientStop gradientStop)
         {
             if (gradientStop == null)

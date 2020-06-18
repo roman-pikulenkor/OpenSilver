@@ -115,23 +115,18 @@ namespace Windows.UI.Xaml.Media
         /// </summary>
         public PathSegmentCollection Segments
         {
-            get
-            {
-                PathSegmentCollection collection = (PathSegmentCollection)GetValue(SegmentsProperty);
-                if (collection == null)
-                {
-                    collection = new PathSegmentCollection();
-                    SetValue(SegmentsProperty, collection);
-                }
-                return collection;
-            }
+            get { return (PathSegmentCollection)GetValue(SegmentsProperty); }
             set { SetValue(SegmentsProperty, value); }
         }
         /// <summary>
         /// Identifies the Segments dependency property.
         /// </summary>
         public static readonly DependencyProperty SegmentsProperty =
-            DependencyProperty.Register("Segments", typeof(PathSegmentCollection), typeof(PathFigure), new PropertyMetadata(null, Segments_Changed));
+            DependencyProperty.Register("Segments", 
+                                        typeof(PathSegmentCollection), 
+                                        typeof(PathFigure), 
+                                        new PropertyMetadata(new PresentationFrameworkCollectionDefaultValueFactory<PathSegment>(new PathSegmentCollection()), 
+                                                             Segments_Changed));
 
         private static void Segments_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

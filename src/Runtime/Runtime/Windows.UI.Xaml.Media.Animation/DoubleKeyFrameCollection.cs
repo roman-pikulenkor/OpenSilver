@@ -34,6 +34,11 @@ namespace Windows.UI.Xaml.Media.Animation
 #endif
     {
 #if WORKINPROGRESS
+        internal override PresentationFrameworkCollection<DoubleKeyFrame> CreateInstanceOverride()
+        {
+            return new DoubleKeyFrameCollection();
+        }
+
         internal override void AddOverride(DoubleKeyFrame keyFrame)
         {
             this.AddDependencyObjectInternal(keyFrame);

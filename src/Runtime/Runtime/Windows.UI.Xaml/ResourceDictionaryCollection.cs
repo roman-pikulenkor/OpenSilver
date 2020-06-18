@@ -113,6 +113,11 @@ namespace Windows.UI.Xaml
             this.OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Replace, value, originalItem, index));
         }
 
+        internal override PresentationFrameworkCollection<ResourceDictionary> CreateInstanceOverride()
+        {
+            throw new NotImplementedException("The method or operation is not implemented.");
+        }
+
         #endregion
 
         #region Events (CollectionChanged)

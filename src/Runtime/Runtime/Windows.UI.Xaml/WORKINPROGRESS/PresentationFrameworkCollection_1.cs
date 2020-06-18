@@ -15,6 +15,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Collections;
 
@@ -309,6 +310,8 @@ namespace Windows.UI.Xaml
 
         #region Abstract/Virtual Members
 
+        internal abstract PresentationFrameworkCollection<T> CreateInstanceOverride();
+
         internal abstract void AddOverride(T value);
 
         internal abstract void ClearOverride();
@@ -533,6 +536,17 @@ namespace Windows.UI.Xaml
         }
 
         #endregion
+
+        internal PresentationFrameworkCollection<T> CreateInstance()
+        {
+            PresentationFrameworkCollection<T> instance = this.CreateInstanceOverride();
+            Debug.Assert(instance != null, "CreateInstance should not return null.");
+            Debug.Assert(instance.GetType() == this.GetType(), 
+                         string.Format("CreateInstance should return an instance of type {0} ({1} was returned).", 
+                                       this.GetType(),
+                                       instance.GetType()));
+            return instance;
+        }
 
         /// <summary>
         /// Get the Count of the underlying <see cref="List{T}"/> collection.

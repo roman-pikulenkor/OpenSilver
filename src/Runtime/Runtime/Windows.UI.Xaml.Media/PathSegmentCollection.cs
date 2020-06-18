@@ -75,6 +75,11 @@ namespace Windows.UI.Xaml.Media
 
         #region Overriden Methods
 
+        internal override PresentationFrameworkCollection<PathSegment> CreateInstanceOverride()
+        {
+            return new PathSegmentCollection();
+        }
+
         internal override void AddOverride(PathSegment segment)
         {
             if (segment == null)

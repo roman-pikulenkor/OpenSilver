@@ -81,23 +81,18 @@ namespace Windows.UI.Xaml.Media
         /// </summary>
         public PathFigureCollection Figures
         {
-            get
-            {
-                PathFigureCollection collection = (PathFigureCollection)GetValue(FiguresProperty);
-                if (collection == null)
-                {
-                    collection = new PathFigureCollection();
-                    SetValue(FiguresProperty, collection);
-                }
-                return collection;
-            }
+            get { return (PathFigureCollection)GetValue(FiguresProperty); }
             set { SetValue(FiguresProperty, value); }
         }
         /// <summary>
         /// Identifies the Figures dependency property.
         /// </summary>
-        public static readonly DependencyProperty FiguresProperty =
-            DependencyProperty.Register("Figures", typeof(PathFigureCollection), typeof(PathGeometry), new PropertyMetadata(null, Figures_Changed));
+        public static readonly DependencyProperty FiguresProperty = 
+            DependencyProperty.Register("Figures", 
+                                        typeof(PathFigureCollection), 
+                                        typeof(PathGeometry), 
+                                        new PropertyMetadata(new PresentationFrameworkCollectionDefaultValueFactory<PathFigure>(new PathFigureCollection()), 
+                                                             Figures_Changed));
 
         private static void Figures_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

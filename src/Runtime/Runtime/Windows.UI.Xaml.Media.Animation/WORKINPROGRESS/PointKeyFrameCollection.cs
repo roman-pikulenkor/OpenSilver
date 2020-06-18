@@ -42,6 +42,11 @@ namespace Windows.UI.Xaml.Media.Animation
         {
             this.SetItemDependencyObjectInternal(index, value);
         }
+
+        internal override PresentationFrameworkCollection<PointKeyFrame> CreateInstanceOverride()
+        {
+            return new PointKeyFrameCollection();
+        }
     }
 }
 

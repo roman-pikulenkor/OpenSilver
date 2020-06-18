@@ -67,7 +67,11 @@ namespace Windows.UI.Xaml.Media
         /// Identifies the Points dependency property.
         /// </summary>
         public static readonly DependencyProperty PointsProperty =
-            DependencyProperty.Register("Points", typeof(PointCollection), typeof(PolyQuadraticBezierSegment), new PropertyMetadata(null, Points_Changed));
+            DependencyProperty.Register("Points", 
+                                        typeof(PointCollection), 
+                                        typeof(PolyQuadraticBezierSegment), 
+                                        new PropertyMetadata(new PresentationFrameworkCollectionDefaultValueFactory<Point>(new PointCollection()), 
+                                                             Points_Changed));
 
         private static void Points_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

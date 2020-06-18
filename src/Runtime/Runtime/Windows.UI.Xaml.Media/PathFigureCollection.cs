@@ -74,6 +74,11 @@ namespace Windows.UI.Xaml.Media
 
         #region Overriden Methods
 
+        internal override PresentationFrameworkCollection<PathFigure> CreateInstanceOverride()
+        {
+            return new PathFigureCollection();
+        }
+
         internal override void AddOverride(PathFigure figure)
         {
             if (figure == null)

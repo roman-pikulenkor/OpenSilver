@@ -383,6 +383,11 @@ namespace Windows.UI.Xaml
 
         #region Overriden Methods
 
+        internal override PresentationFrameworkCollection<DependencyObject> CreateInstanceOverride()
+        {
+            throw new NotImplementedException();
+        }
+
         internal override void AddOverride(DependencyObject value)
         {
             this.AddDependencyObjectInternal(value);

@@ -301,23 +301,17 @@ namespace Windows.UI.Xaml.Shapes
         /// </summary>
         public DoubleCollection StrokeDashArray
         {
-            get
-            {
-                var collection = (DoubleCollection)GetValue(StrokeDashArrayProperty);
-                if (collection == null)
-                {
-                    collection = new DoubleCollection();
-                    SetValue(StrokeDashArrayProperty, collection);
-                }
-                return collection;
-            }
+            get { return (DoubleCollection)GetValue(StrokeDashArrayProperty); }
             set { SetValue(StrokeDashArrayProperty, value); }
         }
         /// <summary>
         /// Identifies the StrokeDashArray dependency property.
         /// </summary>
         public static readonly DependencyProperty StrokeDashArrayProperty =
-            DependencyProperty.Register("StrokeDashArray", typeof(DoubleCollection), typeof(Shape), new PropertyMetadata(null, StrokeDashArray_Changed));
+            DependencyProperty.Register("StrokeDashArray", 
+                                        typeof(DoubleCollection), 
+                                        typeof(Shape), 
+                                        new PropertyMetadata(new PresentationFrameworkCollectionDefaultValueFactory<double>(new DoubleCollection()), StrokeDashArray_Changed));
 
         private static void StrokeDashArray_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
