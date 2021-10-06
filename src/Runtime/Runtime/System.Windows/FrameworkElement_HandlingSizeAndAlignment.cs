@@ -450,7 +450,7 @@ namespace Windows.UI.Xaml
                                             if (styleOfChildOfOuterDomElement.display != "table") //Note: this test was added to prevent a bug that happened when both horizontal and vertical alignment were set, which lead to this line overriding the change of display that happened on a same dom element when the parent did not have a wrapper for its children (I think).
                                             {
                                                 // Note: the "if != 'span'" condition below prevents adding "display: table-cell" to elements inside a TextBlock, such as <Run>, <Span>, <Bold>, etc.
-                                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setDisplayTableCell($0)", childOfOuterDomElement.UniqueIdentifier);
+                                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setDisplayTableCell(""{childOfOuterDomElement.UniqueIdentifier}"")");
                                             }
                                         }
                                     }
@@ -475,7 +475,7 @@ namespace Windows.UI.Xaml
                                             if (styleOfChildOfOuterDomElement.display != "table") //Note: this test was added to prevent a bug that happened when both horizontal and vertical alignment were set, which lead to this line overriding the change of display that happened on a same dom element when the parent did not have a wrapper for its children (I think).
                                             {
                                                 // Note: the "if != 'span'" condition below prevents adding "display: table-cell" to elements inside a TextBlock, such as <Run>, <Span>, <Bold>, etc.
-                                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setDisplayTableCell($0)", childOfOuterDomElement.UniqueIdentifier);
+                                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setDisplayTableCell(""{childOfOuterDomElement.UniqueIdentifier}"")");
                                             }
                                         }
                                     }
@@ -500,7 +500,7 @@ namespace Windows.UI.Xaml
                                             if (styleOfChildOfOuterDomElement.display != "table") //Note: this test was added to prevent a bug that happened when both horizontal and vertical alignment were set, which lead to this line overriding the change of display that happened on a same dom element when the parent did not have a wrapper for its children (I think).
                                             {
                                                 // Note: the "if != 'span'" condition below prevents adding "display: table-cell" to elements inside a TextBlock, such as <Run>, <Span>, <Bold>, etc.
-                                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setDisplayTableCell($0)", childOfOuterDomElement.UniqueIdentifier);
+                                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setDisplayTableCell(""{childOfOuterDomElement.UniqueIdentifier}"")");
                                             }
                                         }
                                     }
@@ -1542,7 +1542,7 @@ namespace Windows.UI.Xaml
                     try
                     {
                     // Hack to improve the Simulator performance by making only one interop call rather than two:
-                    string concatenated = CSHTML5.Interop.ExecuteJavaScript("document.getActualWidthAndHeight($0)", this.INTERNAL_OuterDomElement).ToString();
+                    string concatenated = CSHTML5.Interop.ExecuteJavaScript($"document.getActualWidthAndHeight({CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement)})").ToString();
                     int sepIndex = concatenated != null ? concatenated.IndexOf('|') : -1;
                         if (sepIndex > -1)
                         {
@@ -1591,7 +1591,8 @@ namespace Windows.UI.Xaml
                     try
                     {
                         // Hack to improve the Simulator performance by making only one interop call rather than two:
-                        string concatenated = CSHTML5.Interop.ExecuteJavaScript("(function() { var v = $0.getBoundingClientRect(); return v.width.toFixed(3) + '|' + v.height.toFixed(3) })()", this.INTERNAL_OuterDomElement).ToString();
+                        string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                        string concatenated = CSHTML5.Interop.ExecuteJavaScript($@"(function() {{ var v = {sElement}.getBoundingClientRect(); return v.width.toFixed(3) + '|' + v.height.toFixed(3) }})()").ToString();
                         int sepIndex = concatenated != null ? concatenated.IndexOf('|') : -1;
                         if (sepIndex > -1)
                         {
@@ -1679,8 +1680,9 @@ namespace Windows.UI.Xaml
                     if (double.IsNaN(this.Width) || double.IsNaN(this.Height))
                     {
                         _valueOfLastSizeChanged = new Size(0d, 0d);
-                        object sensor = CSHTML5.Interop.ExecuteJavaScript(@"new ResizeSensor($0, $1)", this.INTERNAL_OuterDomElement, (Action<string>)this.HandleSizeChanged);
-                        this._resizeSensor = sensor;
+                        string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                        string sAction = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS((Action<string>)this.HandleSizeChanged);
+                        this._resizeSensor = CSHTML5.Interop.ExecuteJavaScript($"new ResizeSensor({sElement}, {sAction})");
                     }
                 }
             }
@@ -1690,7 +1692,9 @@ namespace Windows.UI.Xaml
         {
             if (this._resizeSensor != null)
             {
-                CSHTML5.Interop.ExecuteJavaScript("$0.detach($1)", this._resizeSensor, this.INTERNAL_OuterDomElement);
+                string sResizeSensor = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this._resizeSensor);
+                string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                CSHTML5.Interop.ExecuteJavaScript($"{sResizeSensor}.detach({sElement})");
                 this._resizeSensor = null;
             }
         }
@@ -1710,8 +1714,9 @@ namespace Windows.UI.Xaml
                         if (double.IsNaN(this.Width) || double.IsNaN(this.Height))
                         {
                             _valueOfLastSizeChanged = new Size(0d, 0d);
-                            object sensor = CSHTML5.Interop.ExecuteJavaScript(@"new ResizeSensor($0, $1)", this.INTERNAL_OuterDomElement, (Action<string>)this.HandleSizeChanged);
-                            this._resizeSensor = sensor;
+                            string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                            string sAction = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS((Action<string>)this.HandleSizeChanged);
+                            this._resizeSensor = CSHTML5.Interop.ExecuteJavaScript($"new ResizeSensor({sElement}, {sAction})");
                         } 
                         else
                         {
@@ -1732,7 +1737,9 @@ namespace Windows.UI.Xaml
                 {
                     if (this._sizeChangedEventHandlers.Count == 0 && this._resizeSensor != null)
                     {
-                        CSHTML5.Interop.ExecuteJavaScript("$0.detach($1)", this._resizeSensor, this.INTERNAL_OuterDomElement);
+                        string sResizeSensor = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this._resizeSensor);
+                        string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                        CSHTML5.Interop.ExecuteJavaScript($"{sResizeSensor}.detach({sElement})");
                         this._resizeSensor = null;
                     }
                 }
