@@ -65,5 +65,10 @@ If you still encounter any issues, please contact:
 
 
 
-
+# How to create talentia/stable
+git reset --hard upstream/develop
+Merge from: roman/feature/optimization-dollarstring (Accept incomings)
+new commit:
+- Add this to the Control class : internal override bool EnablePointerEventsCore => true;
+- Update readme
 

@@ -89,6 +89,9 @@ namespace Windows.UI.Xaml.Controls
         /// </summary>
         protected bool DisableBaseControlHandlingOfVisualStates = false;
 
+        /// revert pointer events fix
+        internal override bool EnablePointerEventsCore => true;
+
         //-----------------------
         // ISENABLED (OVERRIDE)
         //-----------------------
