@@ -35,6 +35,7 @@ namespace CSHTML5
     {
         private static bool IsJavaScriptCSharpInteropSetUp;
         private static Dictionary<int, Delegate> CallbacksDictionary = new Dictionary<int, Delegate>();
+        private static Dictionary<Delegate, string> JsCallbackFunctions = new Dictionary<Delegate, string>();
         private static Random RandomGenerator = new Random();
         private static List<string> UnmodifiedJavascriptCalls = new List<string>();
         private static int IndexOfNextUnmodifiedJSCallInList = 0;
@@ -47,6 +48,23 @@ namespace CSHTML5
             };
         }
 
+        private static string GetCallbackJsCode(Delegate callback, bool isVoid)
+        {
+            if (!JsCallbackFunctions.ContainsKey(callback))
+            {
+                // Add the callback to the document:
+                var callbackId = ReferenceIDGenerator.GenerateId();
+                CallbacksDictionary.Add(callbackId, callback);
+
+                JsCallbackFunctions[callback] = $@"document.getCallbackFunc({callbackId}, {(!isVoid).ToString().ToLower()}," +              
+#if OPENSILVER
+                $"{(!Interop.IsRunningInTheSimulator_WorkAround).ToString().ToLower()})";
+#elif BRIDGE
+                "true)";
+#endif
+            }
+            return JsCallbackFunctions[callback];
+        }
 
         internal static string GetVariableStringForJS(object variable)
         {
@@ -97,21 +115,9 @@ namespace CSHTML5
                 Delegate callback = (Delegate)variable;
 
                 // Add the callback to the document:
-                int callbackId = ReferenceIDGenerator.GenerateId();
-                CallbacksDictionary.Add(callbackId, callback);
-
                 var isVoid = callback.Method.ReturnType == typeof(void);
+                return GetCallbackJsCode(callback, isVoid);
 
-                // Change the JS code to point to that callback:
-                return string.Format(
-                                   @"(function() {{ return document.eventCallback({0}, {1}, {2});}})", callbackId,
-#if OPENSILVER
-                                       Interop.IsRunningInTheSimulator_WorkAround ? "arguments" : "Array.prototype.slice.call(arguments)",
-#elif BRIDGE
-                                       "Array.prototype.slice.call(arguments)",
-#endif
-                                       (!isVoid).ToString().ToLower()
-                                   );
 
                 // Note: generating the random number in JS rather than C# is important in order
                 // to be able to put this code inside a JavaScript "for" statement (cf.
