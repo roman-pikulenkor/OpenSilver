@@ -202,7 +202,8 @@ namespace Windows.UI.Xaml
                             8 : 4th button (typically the "Browser Back" button)
                             16 : 5th button (typically the "Browser Forward" button)*/
                             int mouseBtn = 0;
-                            int.TryParse((CSHTML5.Interop.ExecuteJavaScript("$0.buttons", jsEventArg) ?? 0).ToString(), out mouseBtn);
+                            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
+                            int.TryParse((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.buttons") ?? 0).ToString(), out mouseBtn);
                             if (mouseBtn != 2)
                             {
                                 ProcessPointerEvent(jsEventArg, (Action<MouseButtonEventArgs>)OnMouseLeftButtonDown, (Action<MouseButtonEventArgs>)OnMouseLeftButtonDown_ForHandledEventsToo, preventTextSelectionWhenPointerIsCaptured: true, checkForDivsThatAbsorbEvents: true, refreshClickCount: true);
@@ -333,7 +334,8 @@ namespace Windows.UI.Xaml
                         8 : 4th button (typically the "Browser Back" button)
                         16 : 5th button (typically the "Browser Forward" button)*/
                         int mouseBtn = 0;
-                        int.TryParse((CSHTML5.Interop.ExecuteJavaScript("$0.buttons", jsEventArg) ?? 0).ToString(), out mouseBtn);
+                        string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
+                        int.TryParse((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.buttons") ?? 0).ToString(), out mouseBtn);
                         if (mouseBtn == 2)
                         {
                             ProcessPointerEvent(jsEventArg, (Action<MouseButtonEventArgs>)OnMouseRightButtonDown, (Action<MouseButtonEventArgs>)OnMouseRightButtonDown_ForHandledEventsToo, preventTextSelectionWhenPointerIsCaptured: true, checkForDivsThatAbsorbEvents: true, refreshClickCount: true);
@@ -837,7 +839,9 @@ namespace Windows.UI.Xaml
         {
             if (!isAlreadySubscribedToMouseEnterAndLeave && this.INTERNAL_OuterDomElement != null)
             {
-                CSHTML5.Interop.ExecuteJavaScript(@"$0.addEventListener(""mouseenter"", $1, false);", this.INTERNAL_OuterDomElement, (Action)SetIsPointerInsideToTrue);
+                string sElement = INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                string sAction = INTERNAL_InteropImplementation.GetVariableStringForJS((Action)SetIsPointerInsideToTrue);
+                CSHTML5.Interop.ExecuteJavaScript($@"{sElement}.addEventListener(""mouseenter"", {sAction}, false);");
 
 
                 //CSHTML5.Interop.ExecuteJavaScript("window.subscribeToPointerEnteredAndLeft($0);", this.INTERNAL_OuterDomElement); //todo: decide whether test is we already subscribed in c# or in the window.subscribeToPointerMovedEventOnWindow method.
@@ -848,7 +852,9 @@ namespace Windows.UI.Xaml
         {
             if (isAlreadySubscribedToMouseEnterAndLeave && this.INTERNAL_OuterDomElement != null)
             {
-                CSHTML5.Interop.ExecuteJavaScript(@"$0.removeEventListener(""mouseenter"", $1);", this.INTERNAL_OuterDomElement, (Action)SetIsPointerInsideToTrue);
+                string sElement = INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                string sAction = INTERNAL_InteropImplementation.GetVariableStringForJS((Action)SetIsPointerInsideToTrue);
+                CSHTML5.Interop.ExecuteJavaScript($@"{sElement}.removeEventListener(""mouseenter"", {sAction});");
 
                 INTERNAL_isPointerInside = false; //don't know if this is useful but just in case.
                 isAlreadySubscribedToMouseEnterAndLeave = false;
@@ -1112,10 +1118,11 @@ namespace Windows.UI.Xaml
         /// </summary>
         void ProcessOnTapped(object jsEventArg)
         {
+            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
             var eventArgs = new TappedRoutedEventArgs()
             {
                 INTERNAL_OriginalJSEventArg = jsEventArg,
-                Handled = ((CSHTML5.Interop.ExecuteJavaScript("$0.handled", jsEventArg) ?? "").ToString() == "handled")
+                Handled = ((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled") ?? "").ToString() == "handled")
             };
 
             if (eventArgs.CheckIfEventShouldBeTreated(this, jsEventArg))
@@ -1132,7 +1139,7 @@ namespace Windows.UI.Xaml
 
                 if (eventArgs.Handled)
                 {
-                    CSHTML5.Interop.ExecuteJavaScript("$0.handled = 'handled'", jsEventArg);
+                    CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled = 'handled'");
                 }
             }
         }
@@ -1225,6 +1232,7 @@ namespace Windows.UI.Xaml
         void ProcessOnRightTapped(object jsEventArg)
 #endif
         {
+            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
 #if MIGRATION
             var eventArgs = new MouseButtonEventArgs()
 #else
@@ -1232,7 +1240,7 @@ namespace Windows.UI.Xaml
 #endif
             {
                 INTERNAL_OriginalJSEventArg = jsEventArg,
-                Handled = ((CSHTML5.Interop.ExecuteJavaScript("$0.handled", jsEventArg) ?? "").ToString() == "handled")
+                Handled = ((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled") ?? "").ToString() == "handled")
             };
 
             if (eventArgs.CheckIfEventShouldBeTreated(this, jsEventArg))
@@ -1241,9 +1249,9 @@ namespace Windows.UI.Xaml
                 eventArgs.FillEventArgs(this, jsEventArg);
 
                 // Prevent the default behavior (which is to show the browser context menu):
-                CSHTML5.Interop.ExecuteJavaScript(@"
-                    if ($0.preventDefault)
-                        $0.preventDefault();", jsEventArg);
+                CSHTML5.Interop.ExecuteJavaScript($@"
+                    if ({sEvent}.preventDefault)
+                        {sEvent}.preventDefault();");
 
                 // Raise the event (if it was not already marked as "handled" by a child element in the visual tree):
                 if (!eventArgs.Handled)
@@ -1262,7 +1270,7 @@ namespace Windows.UI.Xaml
 
                 if (eventArgs.Handled)
                 {
-                    CSHTML5.Interop.ExecuteJavaScript("$0.handled = 'handled'", jsEventArg);
+                    CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled = 'handled'");
                 }
             }
         }
@@ -1358,7 +1366,8 @@ namespace Windows.UI.Xaml
         /// </summary>
         void ProcessOnKeyDown(object jsEventArg)
         {
-            if (!int.TryParse(CSHTML5.Interop.ExecuteJavaScript("$0.keyCode", jsEventArg).ToString(), out int keyCode))
+            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
+            if (!int.TryParse(CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.keyCode").ToString(), out int keyCode))
                 return;
 
 #if MIGRATION
@@ -1371,7 +1380,7 @@ namespace Windows.UI.Xaml
                 INTERNAL_OriginalJSEventArg = jsEventArg,
                 PlatformKeyCode = keyCode,
                 Key = INTERNAL_VirtualKeysHelpers.GetKeyFromKeyCode(keyCode),
-                Handled = ((CSHTML5.Interop.ExecuteJavaScript("$0.handled", jsEventArg) ?? "").ToString() == "handled")
+                Handled = ((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled") ?? "").ToString() == "handled")
             };
 
             // Add the key modifier to the eventArgs:
@@ -1386,8 +1395,8 @@ namespace Windows.UI.Xaml
 
             if (eventArgs.Handled)
             {
-                CSHTML5.Interop.ExecuteJavaScript("$0.handled = 'handled'", jsEventArg);
-                CSHTML5.Interop.ExecuteJavaScript("$0.preventDefault()", jsEventArg);
+                CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled = 'handled'");
+                CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.preventDefault()");
             }
         }
 
@@ -1474,7 +1483,8 @@ namespace Windows.UI.Xaml
         /// </summary>
         void ProcessOnKeyUp(object jsEventArg)
         {
-            if (!int.TryParse(CSHTML5.Interop.ExecuteJavaScript("$0.keyCode", jsEventArg).ToString(), out int keyCode))
+            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
+            if (!int.TryParse(CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.keyCode").ToString(), out int keyCode))
                 return;
 
 #if MIGRATION
@@ -1487,7 +1497,7 @@ namespace Windows.UI.Xaml
                 INTERNAL_OriginalJSEventArg = jsEventArg,
                 PlatformKeyCode = keyCode,
                 Key = INTERNAL_VirtualKeysHelpers.GetKeyFromKeyCode(keyCode),
-                Handled = ((CSHTML5.Interop.ExecuteJavaScript("$0.handled", jsEventArg) ?? "").ToString() == "handled")
+                Handled = ((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled") ?? "").ToString() == "handled")
             };
 
             // Add the key modifier to the eventArgs:
@@ -1502,7 +1512,7 @@ namespace Windows.UI.Xaml
 
             if (eventArgs.Handled)
             {
-                CSHTML5.Interop.ExecuteJavaScript("$0.handled = 'handled'", jsEventArg);
+                CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled = 'handled'");
             }
         }
 
@@ -1683,7 +1693,8 @@ namespace Windows.UI.Xaml
         void StartListeningToKeyboardEvents(object sender, RoutedEventArgs e)
         {
             //the following test is for cases such as focusing a TextBox that is inside a Button for example.
-            if (!Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript("document.checkForDivsThatAbsorbEvents($0)", e.INTERNAL_OriginalJSEventArg)))
+            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(e.INTERNAL_OriginalJSEventArg);
+            if (!Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript($"document.checkForDivsThatAbsorbEvents({sEvent})")))
             {
                 this.KeyDown -= OnKeyDownWhenFocused; //just in case but we shouldn't need it (if we need it here, it means that the keyboard events kept getting taken into consideration even though it didn't have the focus).
                 this.KeyDown += OnKeyDownWhenFocused;
@@ -1803,7 +1814,7 @@ namespace Windows.UI.Xaml
             UIElement element = (UIElement)sender; //jsEvent should be called "sender" but I kept the former implementation so I also kept the name.
             var elementToBlur = element.GetFocusTarget();
             if (elementToBlur != null)
-                CSHTML5.Interop.ExecuteJavaScript(@"$0.blur()", elementToBlur);
+                CSHTML5.Interop.ExecuteJavaScript($@"{INTERNAL_InteropImplementation.GetVariableStringForJS(elementToBlur)}.blur()");
         }
 
         internal void AllowFocusEvents()
@@ -1921,7 +1932,8 @@ namespace Windows.UI.Xaml
                                                         //in a button or any other control that reacts to clicks from also triggering the click from that control
             bool refreshClickCount = false)
         {
-            bool isMouseEvent = Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript("$0.type.startsWith('mouse')", jsEventArg));
+            string sEvent = INTERNAL_InteropImplementation.GetVariableStringForJS(jsEventArg);
+            bool isMouseEvent = Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.type.startsWith('mouse')"));
             if (!(ignoreMouseEvents && isMouseEvent)) //Ignore mousedown, mousemove and mouseup if the touch equivalents have been handled.
             {
 #if MIGRATION
@@ -1931,11 +1943,11 @@ namespace Windows.UI.Xaml
 #endif
                 {
                     INTERNAL_OriginalJSEventArg = jsEventArg,
-                    Handled = ((CSHTML5.Interop.ExecuteJavaScript("$0.handled", jsEventArg) ?? "").ToString() == "handled")
-                };
+                    Handled = ((CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled") ?? "").ToString() == "handled")
+            };
                 if (!eventArgs.Handled && checkForDivsThatAbsorbEvents)
                 {
-                    eventArgs.Handled = Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript("document.checkForDivsThatAbsorbEvents($0)", jsEventArg));
+                    eventArgs.Handled = Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript($"document.checkForDivsThatAbsorbEvents({sEvent})"));
                 }
 
                 if (refreshClickCount)
@@ -1957,7 +1969,7 @@ namespace Windows.UI.Xaml
 
                     if (eventArgs.Handled)
                     {
-                        CSHTML5.Interop.ExecuteJavaScript("$0.handled = 'handled'", jsEventArg);
+                        CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.handled = 'handled'");
                     }
                 }
 
@@ -1966,7 +1978,7 @@ namespace Windows.UI.Xaml
                 {
                     CSHTML5.Interop.ExecuteJavaScript(@"window.getSelection().removeAllRanges()");
                 }
-                bool isTouchEndEvent = Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript("$0.type == 'touchend'", jsEventArg));
+                bool isTouchEndEvent = Convert.ToBoolean(CSHTML5.Interop.ExecuteJavaScript($"{sEvent}.type == 'touchend'"));
                 if (isTouchEndEvent) //prepare to ignore the mouse events since they were already handled as touch events
                 {
                     ignoreMouseEvents = true;
