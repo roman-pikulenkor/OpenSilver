@@ -90,6 +90,11 @@ namespace Windows.UI.Xaml.Controls
         /// </summary>
         protected bool DisableBaseControlHandlingOfVisualStates = false;
 
+        /// <summary>
+        /// CPM Has problems with custom layout in the grid
+        /// </summary>
+        internal override bool EnablePointerEventsCore => true;        
+
         //-----------------------
         // ISENABLED (OVERRIDE)
         //-----------------------

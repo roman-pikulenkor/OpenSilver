@@ -67,6 +67,19 @@ If you still encounter any issues, please contact:
 - the CSHTML5 team at: http://cshtml5.com/contact.aspx
 
 
+# How to build talentia/stable
 
+git reset --hard upstream/develop
+Merge from: romanp/feature/optimization-dollarstring
+git cherry-pick f0ac61c9d0a8298baff8f9c424d14c85d0e058b4 # fix usubscribe of clicks
+git cherry-pick cb971941e016ebb902eee63ed387ef1f5d2dd884 # revert sync storyboarding, breaks search in CPM
+git cherry-pick a79c9009444e22818697099ba4142f1c6350b35b # Disable margin Divs under CustomLayout
 
+new commit:
+- Add this to the Control class:
+        /// <summary>
+        /// CPM Has problems with custom layout in the grid
+        /// </summary>
+        internal override bool EnablePointerEventsCore => true;
 
+- Update readme with this section
