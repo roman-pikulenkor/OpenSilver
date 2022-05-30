@@ -99,7 +99,7 @@ namespace Windows.UI.Xaml // Note: we didn't use the "Interop" namespace to avoi
                     if (!CSHTML5.Interop.IsRunningInTheSimulator)
 #endif
                     {
-                        CSHTML5.Interop.ExecuteJavaScript(@"
+                        CSHTML5.Internal.INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptSync(@"
 var element = document.body;
 var requestMethod = element.requestFullScreen || element.webkitRequestFullScreen || element.mozRequestFullScreen || element.msRequestFullScreen;
 if (requestMethod) {
@@ -113,7 +113,7 @@ if (requestMethod) {
                 }
                 else
                 {
-                    CSHTML5.Interop.ExecuteJavaScript(@"
+                    CSHTML5.Internal.INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptSync(@"
 var requestMethod = document.exitFullScreen || document.webkitExitFullScreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || document.msExitFullScreen || document.msCancelFullScreen;
 if (requestMethod) {
     requestMethod.call(document);

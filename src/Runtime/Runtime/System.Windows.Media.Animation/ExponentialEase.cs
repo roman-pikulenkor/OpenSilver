@@ -73,7 +73,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 //note: below,  p is the advancement of the animation in percentage (decimal)
                 //              opts (optional) are the options (such as "queue")
                 //              tweenDelta (optional) is the delta between the starting value and the end value
-                CSHTML5.Interop.ExecuteJavaScript(@"
+                CSHTML5.Internal.INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptSync(@"
         Velocity.Easings.easeInExponentialCustomEasing = function (p, opts, tweenDelta) {
     var exponent = 2;
     if(opts != undefined) {
@@ -89,7 +89,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 //note: below,  p is the advancement of the animation in percentage (decimal)
                 //              opts (optional) are the options (such as "queue")
                 //              tweenDelta (optional) is the delta between the starting value and the end value
-                CSHTML5.Interop.ExecuteJavaScript(@"
+                CSHTML5.Internal.INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptSync(@"
         Velocity.Easings.easeOutExponentialCustomEasing = function (p, opts, tweenDelta) {
     var exponent = 2;
     if(opts != undefined) {
@@ -105,7 +105,7 @@ namespace Windows.UI.Xaml.Media.Animation
                 //note: below,  p is the advancement of the animation in percentage (decimal)
                 //              opts (optional) are the options (such as "queue")
                 //              tweenDelta (optional) is the delta between the starting value and the end value
-                CSHTML5.Interop.ExecuteJavaScript(@"
+                CSHTML5.Internal.INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptSync(@"
         Velocity.Easings.easeInOutExponentialCustomEasing = function (p, opts, tweenDelta) {
     var exponent = 2;
     if(opts != undefined) {

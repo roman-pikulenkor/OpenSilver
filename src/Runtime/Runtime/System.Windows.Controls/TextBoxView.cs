@@ -389,7 +389,7 @@ return globalIndexes;
                 return;
 
             string sDiv = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(_contentEditableDiv);
-            OpenSilver.Interop.ExecuteJavaScriptAsync($@"
+            OpenSilver.Interop.ExecuteJavaScriptFastAsync($@"
 var sel = window.getSelection()
 var nodesAndOffsets = {{}}; //this will hold the nodes and offsets useful to set the range's start and end.
 document.getRangeStartAndEnd({sDiv}, true, 0, {startIndex.ToInvariantString()}, {endIndex.ToInvariantString()}, nodesAndOffsets, false, false)
@@ -921,7 +921,7 @@ element_OutsideEventHandler.addEventListener('paste', function(e) {{
                 if (_contentEditableDiv != null)
                 {
                     string sDiv = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(_contentEditableDiv);
-                    OpenSilver.Interop.ExecuteJavaScript($@"
+                    INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptSync($@"
 if({sE}.target != {sDiv}) {{
 {sDiv}.focus()
 var range,selection;

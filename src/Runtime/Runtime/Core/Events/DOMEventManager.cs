@@ -80,9 +80,11 @@ namespace CSHTML5.Internal
             {
                 foreach (string eventName in _domEventsNamesToListenTo)
                 {
-                    OpenSilver.Interop.ExecuteJavaScriptAsync(
-                        "document.addEventListenerSafe($0, $1, $2)", domElement, eventName, _handler
-                    );
+                    string sAction = INTERNAL_InteropImplementation.GetVariableStringForJS(_handler);
+                    if (domElement is INTERNAL_HtmlDomElementReference)
+                        OpenSilver.Interop.ExecuteJavaScriptFastAsync($@"document.addEventListenerSafe(""{((INTERNAL_HtmlDomElementReference)domElement).UniqueIdentifier}"", ""{eventName}"", {sAction})");
+                    else
+                        OpenSilver.Interop.ExecuteJavaScriptFastAsync($@"document.addEventListenerSafe({INTERNAL_InteropImplementation.GetVariableStringForJS(domElement)}, ""{eventName}"", {sAction})");
                 }
 
                 _domElement = domElement;

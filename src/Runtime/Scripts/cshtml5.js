@@ -406,7 +406,7 @@ document.eventCallback = function (callbackId, arguments, sync) {
 
 document.callScriptSafe = function (referenceId, javaScriptToExecute, errorCallBackId) {
     try {
-        document.jsObjRef[referenceId] = eval(javaScriptToExecute); 
+        document.jsObjRef[referenceId] = javaScriptToExecute(); 
         return document.jsObjRef[referenceId];
     } catch (error) {
         document.errorCallback(error, errorCallBackId); 

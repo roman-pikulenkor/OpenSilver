@@ -87,14 +87,7 @@ namespace OpenSilver
         /// </summary>
         public static void ExecuteJavaScriptFastAsync(string javascript)
         {
-#if OPENSILVER
-            if (CSHTML5.Interop.IsRunningInTheSimulator_WorkAround)
-#elif BRIDGE
-            if (CSHTML5.Interop.IsRunningInTheSimulator)
-#endif
-                CSHTML5.INTERNAL_InteropImplementation.ExecuteJavaScript_SimulatorImplementation(javascript, runAsynchronously: true);
-            else
-                INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptAsync(javascript);
+            INTERNAL_SimulatorExecuteJavaScript.ExecuteJavaScriptAsync(javascript);
         }
         
 
