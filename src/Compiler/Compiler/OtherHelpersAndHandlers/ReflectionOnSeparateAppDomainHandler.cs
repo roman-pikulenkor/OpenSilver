@@ -175,6 +175,12 @@ namespace DotNetForHtml5.Compiler
             return _marshalledObject.GetCSharpEquivalentOfXamlTypeAsString(namespaceName, localTypeName, assemblyNameIfAny, ifTypeNotFoundTryGuessing);
         }
 
+        public string GetVbEquivalentOfXamlTypeAsString(string namespaceName, string localTypeName, string assemblyNameIfAny = null, bool ifTypeNotFoundTryGuessing = false)
+        {
+            string result = _marshalledObject.GetCSharpEquivalentOfXamlTypeAsString(namespaceName, localTypeName, assemblyNameIfAny, ifTypeNotFoundTryGuessing);
+            return result.Replace("global::", "Global.");
+        }
+
         public string GetAssemblyQualifiedNameOfXamlType(string namespaceName, string localTypeName, string assemblyName)
         {
             return _marshalledObject.GetAssemblyQualifiedNameOfXamlType(namespaceName, localTypeName, assemblyName);
@@ -283,6 +289,12 @@ namespace DotNetForHtml5.Compiler
         public string GetField(string fieldName, string namespaceName, string typeName, string assemblyName)
         {
             return _marshalledObject.GetField(fieldName, namespaceName, typeName, assemblyName);
+        }
+
+        public string GetVBField(string fieldName, string namespaceName, string typeName, string assemblyName)
+        {
+            string result = _marshalledObject.GetField(fieldName, namespaceName, typeName, assemblyName);
+            return result.Replace("global::", "Global.");
         }
 
         public string GetEventHandlerType(string eventName, string namespaceName, string typeName, string assemblyName)
