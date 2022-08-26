@@ -40,8 +40,7 @@ namespace Windows.UI.Xaml.Controls
 			set { SetValue(LineStackingStrategyProperty, value); }
 		}
 
-		[OpenSilver.NotImplemented]
-		public double BaselineOffset { get; private set; }
+		public double BaselineOffset { get; set; }
 
         [OpenSilver.NotImplemented]
 		public static readonly DependencyProperty CharacterSpacingProperty =

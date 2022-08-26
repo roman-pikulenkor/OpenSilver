@@ -760,7 +760,25 @@ namespace Windows.UI.Xaml
                 typeof(FrameworkElement),
                 new FrameworkPropertyMetadata(VerticalAlignment.Stretch, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsArrange, VerticalAlignment_Changed)
                 {
-                    CallPropertyChangedWhenLoadedIntoVisualTree = WhenToCallPropertyChangedEnum.IfPropertyIsSet
+                    CallPropertyChangedWhenLoadedIntoVisualTree = WhenToCallPropertyChangedEnum.IfPropertyIsSet,
+                    GetCSSEquivalent = (instance) => new CSSEquivalent
+                    {
+                        Value = (inst, value) =>
+                        {
+                            switch ((VerticalAlignment)value)
+                            {
+                                case VerticalAlignment.Top:
+                                    return "top";
+                                case VerticalAlignment.Center:
+                                    return "middle";
+                                case VerticalAlignment.Bottom:
+                                    return "bottom";
+                                default:
+                                    return "";
+                            }
+                        },
+                        Name = new List<string> { "verticalAlign" },
+                    },
                 });
 
         private static void VerticalAlignment_Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
