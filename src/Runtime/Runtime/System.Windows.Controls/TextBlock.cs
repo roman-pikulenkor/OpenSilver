@@ -364,7 +364,6 @@ namespace Windows.UI.Xaml.Controls
             {
                 return new Size(this.Width, this.Height);
             }
-
             //Size actualSize = this.INTERNAL_GetActualWidthAndHeight();
             //return actualSize;
             Size BorderThicknessSize = new Size(BorderThickness.Left + BorderThickness.Right, BorderThickness.Top + BorderThickness.Bottom);
