@@ -19,9 +19,11 @@ using System.Collections.Generic;
 using System.Linq;
 
 #if MIGRATION
+using System.Windows.Automation.Peers;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 #else
+using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
 
@@ -754,7 +756,10 @@ namespace Windows.UI.Xaml.Controls
                     }
                     else
                     {
-                        innerDivStyle.height = "auto"; // This makes it possible to center-align an item inside the ScrollViewer.
+                        if (this.VerticalAlignment == VerticalAlignment.Stretch)
+                            innerDivStyle.height = "100%";
+                        else
+                            innerDivStyle.height = "auto"; // This makes it possible to center-align an item inside the ScrollViewer.
                         innerDivStyle.minHeight = "100%"; // This fixes an issue where the background of the "InputProject" test project is correct only at the top of the page.
                     }
                 }
@@ -1593,5 +1598,8 @@ namespace Windows.UI.Xaml.Controls
                 e.Handled = true;
             }
         }
+
+        protected override AutomationPeer OnCreateAutomationPeer()
+            => new ScrollViewerAutomationPeer(this);
     }
 }
