@@ -16,15 +16,25 @@ using System.Threading;
 
 namespace Runtime.OpenSilver.Tests.Maintenance.MemoryLeak
 {
-    public class GarbageCollectorTracker
+    class ItemWithTrackableCallback
     {
-        public bool IsCollected => CollectedResetEvent.WaitOne(0);
+        private readonly GarbageCollectorTracker _gcTracker;
+        private readonly ManualResetEvent _manualResetEvent;
 
-        public ManualResetEvent CollectedResetEvent { get; } = new ManualResetEvent(false);
-
-        public void MarkAsCollected()
+        public ItemWithTrackableCallback(GarbageCollectorTracker gcTracker, ManualResetEvent manualResetEvent)
         {
-            CollectedResetEvent.Set();
+            _gcTracker = gcTracker;
+            _manualResetEvent = manualResetEvent;
+        }
+
+        ~ItemWithTrackableCallback()
+        {
+            _gcTracker.MarkAsCollected();
+        }
+
+        public void Callback()
+        {
+            _manualResetEvent.Set();
         }
     }
 }
