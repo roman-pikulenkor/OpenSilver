@@ -621,6 +621,22 @@ namespace DotNetForHtml5.Compiler
                                                         element
                                                     );
                                             }
+                                            else if (elementTypeInCSharp == $"Global.{_metadata.SystemWindowsNS}.TemplateBindingExtension"
+                                                && memberName == "Path")
+                                            {
+                                                ResolvePathForTemplateBinding(attributeValue, element, out string typeName, out string propertyName);
+                                                parameters.StringBuilder.AppendLine(
+                                                    string.Format("{0}.DependencyPropertyName = {1}",
+                                                        elementUniqueNameOrThisKeyword,
+                                                        SystemTypesHelperVB.ConvertFromInvariantString(propertyName, "System.String")));
+                                                if (typeName != null)
+                                                {
+                                                    parameters.StringBuilder.AppendLine(
+                                                        $"{elementUniqueNameOrThisKeyword}.DependencyPropertyOwnerType = typeof({typeName});");
+                                                }
+
+                                                codeForInstantiatingTheAttributeValue = null;
+                                            }
                                             else
                                             {
                                                 //------------
@@ -1724,6 +1740,44 @@ End If",
                       .Append(')');
 
                     pos++;
+                }
+            }
+
+            private void ResolvePathForTemplateBinding(string path, XElement element, out string typeName, out string propertyName)
+            {
+                typeName = null;
+                propertyName = path;
+
+                int idx1 = path.IndexOf('.');
+                if (idx1 > 0 && idx1 < path.Length - 1)
+                {
+                    string xmlPrefix, type;
+                    propertyName = path.Substring(idx1 + 1);
+
+                    int idx2 = path.IndexOf(':', 0, idx1);
+                    if (idx2 > -1)
+                    {
+                        xmlPrefix = path.Substring(0, idx2);
+                        type = path.Substring(idx2 + 1, idx1 - idx2 - 1);
+                    }
+                    else
+                    {
+                        xmlPrefix = null;
+                        type = path.Substring(0, idx1);
+                    }
+
+                    XNamespace xmlNamespace = xmlPrefix == null ? element.GetDefaultNamespace() : element.GetNamespaceOfPrefix(xmlPrefix);
+                    GettingInformationAboutXamlTypesVB.GetClrNamespaceAndLocalName(
+                        XName.Get(type, xmlNamespace.NamespaceName),
+                        out string namespaceName, out string localTypeName, out string assemblyName
+                    );
+
+                    try
+                    {
+                        typeName = _reflectionOnSeparateAppDomain.GetCSharpEquivalentOfXamlTypeAsString(
+                            namespaceName, localTypeName, assemblyName);
+                    }
+                    catch { }
                 }
             }
 
