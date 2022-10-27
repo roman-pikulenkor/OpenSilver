@@ -348,6 +348,8 @@ namespace Windows.UI.Xaml
             }
         }
 
+        internal bool KeepHiddenInFirstRender { get; set; }
+
         public UIElement()
         {
             DesiredSize = new Size();
@@ -1779,7 +1781,7 @@ document.ondblclick = null;
 
         public void UpdateLayout()
         {
-
+            LayoutManager.Current.UpdateLayout();
         }
 
         internal void UpdateCustomLayout(Size newSize)
