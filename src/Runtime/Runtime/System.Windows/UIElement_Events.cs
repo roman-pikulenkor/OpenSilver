@@ -710,11 +710,11 @@ namespace Windows.UI.Xaml
         /// </summary>
         /// <param name="eventArgs">The arguments for the event.</param>
 #if MIGRATION
-        protected internal virtual void OnMouseLeave(MouseEventArgs eventArgs)
+        protected virtual void OnMouseLeave(MouseEventArgs eventArgs)
         {
         }
 #else
-        protected internal virtual void OnPointerExited(PointerRoutedEventArgs eventArgs)
+        protected virtual void OnPointerExited(PointerRoutedEventArgs eventArgs)
         {
         }
 #endif
@@ -1003,7 +1003,7 @@ namespace Windows.UI.Xaml
             object target = GetFocusTarget();
             if (target != null)
             {
-                OpenSilver.Interop.ExecuteJavaScript("document.enableFocus($0)", ((INTERNAL_HtmlDomElementReference)target).UniqueIdentifier);
+                OpenSilver.Interop.ExecuteJavaScriptFastAsync($"document.enableFocus(\"{((INTERNAL_HtmlDomElementReference)target).UniqueIdentifier}\")");
             }
         }
 
@@ -1012,7 +1012,7 @@ namespace Windows.UI.Xaml
             object target = GetFocusTarget();
             if (target != null)
             {
-                OpenSilver.Interop.ExecuteJavaScript("document.disableFocus($0)", ((INTERNAL_HtmlDomElementReference)target).UniqueIdentifier);
+                OpenSilver.Interop.ExecuteJavaScriptFastAsync($"document.disableFocus(\"{((INTERNAL_HtmlDomElementReference)target).UniqueIdentifier}\")");
             }
         }
 

@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.Globalization;
 using CSHTML5.Internal;
+using CSHTML5;
 
 #if MIGRATION
 using System.Windows.Controls;
@@ -132,12 +133,13 @@ namespace Windows.UI.Xaml
             this.INTERNAL_RootDomElement = rootDomElement;
 
             // Reset the content of the root DIV:
-            CSHTML5.Interop.ExecuteJavaScript("document.clearXamlRoot()");
+            CSHTML5.Interop.ExecuteJavaScriptFastAsync("document.clearXamlRoot()");
 
             // In case of XAML view hosted inside an HTML app, we usually set the "position" of the window root to "relative" rather than "absolute" (via external JavaScript code) in order to display it inside a specific DIV. However, in this case, the layers that contain the Popups are placed under the window DIV instead of over it. To work around this issue, we set the root element display to "grid". See the sample app "IntegratingACshtml5AppInAnSPA".
             if (Grid_InternalHelpers.isCSSGridSupported()) //todo: what about the old browsers where "CSS Grid" is not supported?
             {
-                CSHTML5.Interop.ExecuteJavaScriptAsync("$0.style.display = 'grid'", rootDomElement);
+                string sRootElement = INTERNAL_InteropImplementation.GetVariableStringForJS(rootDomElement);
+                CSHTML5.Interop.ExecuteJavaScriptFastAsync($"{sRootElement}.style.display = 'grid'");
             }
 
             // Create the DIV that will correspond to the root of the window visual tree:
@@ -190,25 +192,14 @@ namespace Windows.UI.Xaml
         {
             double width;
             double height;
-#if OPENSILVER
-            if (true)
-#elif BRIDGE
-            if (CSHTML5.Interop.IsRunningInTheSimulator)
-#endif
-            {
-                // Hack to improve the Simulator performance by making only one interop call rather than two:
-                string concatenated = Convert.ToString(OpenSilver.Interop.ExecuteJavaScript("$0.offsetWidth + '|' + $0.offsetHeight", this.INTERNAL_OuterDomElement));
-                int sepIndex = concatenated.IndexOf('|');
-                string widthAsString = concatenated.Substring(0, sepIndex);
-                string heightAsString = concatenated.Substring(sepIndex + 1);
-                width = double.Parse(widthAsString, CultureInfo.InvariantCulture); //todo: verify that the locale is OK. I think that JS by default always produces numbers in invariant culture (with "." separator).
-                height = double.Parse(heightAsString, CultureInfo.InvariantCulture); //todo: read note above
-            }
-            else
-            {
-                width = Convert.ToDouble(OpenSilver.Interop.ExecuteJavaScript("$0.offsetWidth", this.INTERNAL_OuterDomElement)); //(double)INTERNAL_HtmlDomManager.GetRawHtmlBody().clientWidth;
-                height = Convert.ToDouble(OpenSilver.Interop.ExecuteJavaScript("$0.offsetHeight", this.INTERNAL_OuterDomElement)); //(double)INTERNAL_HtmlDomManager.GetRawHtmlBody().clientHeight;
-            }
+            string sElement = INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+            // Hack to improve the Simulator performance by making only one interop call rather than two:
+            string concatenated = OpenSilver.Interop.ExecuteJavaScriptString($"{sElement}.offsetWidth + '|' + {sElement}.offsetHeight");
+            int sepIndex = concatenated.IndexOf('|');
+            string widthAsString = concatenated.Substring(0, sepIndex);
+            string heightAsString = concatenated.Substring(sepIndex + 1);
+            width = double.Parse(widthAsString, CultureInfo.InvariantCulture); //todo: verify that the locale is OK. I think that JS by default always produces numbers in invariant culture (with "." separator).
+            height = double.Parse(heightAsString, CultureInfo.InvariantCulture); //todo: read note above
 
             var eventArgs = new WindowSizeChangedEventArgs()
             {

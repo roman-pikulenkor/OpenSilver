@@ -183,23 +183,25 @@ namespace Windows.UI.Xaml.Media.Animation
                         }
                         object cssValue = cssEquivalent.Value(target, to);
 
-                        object newObj = CSHTML5.Interop.ExecuteJavaScriptAsync(@"new Object()");
-
-                        if (AnimationHelpers.IsValueNull(from)) //todo: when using Bridge, I guess we would want to directly use "from == null" since it worked in the first place (I think).
+                        string sCssValue = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(cssValue);
+                        string fromToValues;
+                        if (!from.HasValue)
                         {
-                            foreach (string csspropertyName in cssEquivalent.Name)
-                            {
-                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"$0[$1] = $2;", newObj, csspropertyName, cssValue);
-                            }
+                            fromToValues = "{" + string.Join(",", cssEquivalent.Name.Select(name => $"\"{name}\":{sCssValue}")) + "}";
                         }
                         else
                         {
-                            foreach (string csspropertyName in cssEquivalent.Name)
-                            {
-                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"$0[$1] = [$2, $3];", newObj, csspropertyName, cssValue, from);
-                            }
+                            string sFrom = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(from);
+                            fromToValues = "{" + string.Join(",", cssEquivalent.Name.Select(name => $"\"{name}\":[{sCssValue},{sFrom}]")) + "}";
                         }
-                        AnimationHelpers.CallVelocity(cssEquivalent.DomElement, Duration, easingFunction, visualStateGroupName, callbackForWhenfinished, newObj);
+
+                        AnimationHelpers.CallVelocity(
+                            cssEquivalent.DomElement,
+                            Duration,
+                            easingFunction,
+                            visualStateGroupName,
+                            callbackForWhenfinished,
+                            fromToValues);
                         target.DirtyVisualValue(dependencyProperty);
                     }
                 }
@@ -241,7 +243,8 @@ namespace Windows.UI.Xaml.Media.Animation
                                 }
                                 if (cssEquivalent.DomElement != null)
                                 {
-                                    CSHTML5.Interop.ExecuteJavaScriptAsync(@"Velocity($0, ""stop"", $1);", cssEquivalent.DomElement, specificGroupName);
+                                    string sDomElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(cssEquivalent.DomElement);
+                                    CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"Velocity({sDomElement}, ""stop"", ""{specificGroupName}"");");
                                 }
                             }
                         }
@@ -253,7 +256,8 @@ namespace Windows.UI.Xaml.Media.Animation
                         {
                             if (equivalent.DomElement != null)
                             {
-                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"Velocity($0, ""stop"", $1);", equivalent.DomElement, specificGroupName);
+                                string sDomElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(equivalent.DomElement);
+                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"Velocity({sDomElement}, ""stop"", ""{specificGroupName}"");");
                             }
                         }
                     }

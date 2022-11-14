@@ -164,15 +164,15 @@ namespace Windows.UI.Xaml.Controls
                     //---------------------------------------------------------------
                     if (Grid_InternalHelpers.IsAllCollapsedColumns(this, elementColumn, elementLastColumn))
                     {
-                        CSHTML5.Interop.ExecuteJavaScriptAsync(@"$0.style.overflow = 'hidden'", uiElement.INTERNAL_OuterDomElement);
-                        CSHTML5.Interop.ExecuteJavaScriptAsync(@"$0.setAttribute('data-isCollapsedDueToHiddenColumn', true)", uiElement.INTERNAL_OuterDomElement);
+                        string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(uiElement.INTERNAL_OuterDomElement);
+                        CSHTML5.Interop.ExecuteJavaScriptFastAsync($"{sElement}.style.overflow = 'hidden'");
+                        CSHTML5.Interop.ExecuteJavaScriptFastAsync($"{sElement}.setAttribute('data-isCollapsedDueToHiddenColumn', true)");
                     }
                     else
                     {
                         // Note: we set to Visible only if it was previously Hidden due to the fact that a Grid column is hidden, to avoid conflicts such as replacing the "overflow" property set by the ScrollViewer or by the "ClipToBounds" property.
                         //setAttribute('data-isCollapsedDueToHiddenColumn', false)
-                        CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setGridCollapsedDuetoHiddenColumn($0)", 
-                            ((INTERNAL_HtmlDomElementReference)uiElement.INTERNAL_OuterDomElement).UniqueIdentifier);
+                        CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setGridCollapsedDuetoHiddenColumn(""{((INTERNAL_HtmlDomElementReference)uiElement.INTERNAL_OuterDomElement).UniqueIdentifier}"")");
                     }
                 }
             }
@@ -312,16 +312,7 @@ namespace Windows.UI.Xaml.Controls
             int columnIndex = _columnDefinitionsOrNull.IndexOf(columnDefinition);
 
             var div1 = AddTemporaryDivForRowOrColumnDimensions(columnIndex, 0);
-
-            if (CSharpXamlForHtml5.Environment.IsRunningInJavaScript)
-            {
-                returnValue = ((dynamic)div1).offsetWidth;
-            }
-            else
-            {
-                returnValue = Convert.ToDouble(INTERNAL_HtmlDomManager.GetDomElementAttribute(div1, "offsetWidth"));
-            }
-
+            returnValue = INTERNAL_HtmlDomManager.GetDomElementAttributeInt32(div1, "offsetWidth");
             INTERNAL_HtmlDomManager.RemoveFromDom(div1);
 
             return returnValue;
@@ -335,16 +326,7 @@ namespace Windows.UI.Xaml.Controls
             int rowIndex = _rowDefinitionsOrNull.IndexOf(rowDefinition);
 
             var div1 = AddTemporaryDivForRowOrColumnDimensions(0, rowIndex);
-
-            if (CSharpXamlForHtml5.Environment.IsRunningInJavaScript)
-            {
-                returnValue = ((dynamic)div1).offsetHeight;
-            }
-            else
-            {
-                returnValue = Convert.ToDouble(INTERNAL_HtmlDomManager.GetDomElementAttribute(div1, "offsetHeight"));
-            }
-
+            returnValue = INTERNAL_HtmlDomManager.GetDomElementAttributeInt32(div1, "offsetHeight");
             INTERNAL_HtmlDomManager.RemoveFromDom(div1);
 
             return returnValue;

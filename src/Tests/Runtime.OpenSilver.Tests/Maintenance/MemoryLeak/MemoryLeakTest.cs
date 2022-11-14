@@ -11,11 +11,11 @@
 *
 \*====================================================================================*/
 
-
 using System;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenSilver.Internal.Xaml.Context;
+using System.Diagnostics;
 
 #if MIGRATION
 using System.Windows;
@@ -29,113 +29,35 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Core;
 #endif
 
-namespace Runtime.OpenSilver.Tests.Maintenance.MemoryLeak
+namespace OpenSilver.MemoryLeak.Tests;
+
+[TestClass]
+public class MemoryLeakTest
 {
-    [TestClass]
-    public class MemoryLeakTest
+    [TestMethod]
+    public void Element_Must_Be_Collected()
     {
-        [TestMethod]
-        public void Element_Must_Be_Collected()
+        static void CreateRemoveElement(GCTracker c)
         {
-            var c = new GarbageCollectorTracker();
-            CreateRemoveElement(c);
-            CollectGarbage();
-            Assert.IsTrue(c.IsCollected);
-        }
+            var tc = new MyFrameworkElement();
+            MemoryLeaksHelper.SetTracker(tc, c);
 
-        [TestMethod]
-        public void CoreDispatcher_Should_Release_Callback()
-        {
-            var c = new GarbageCollectorTracker();
-            InvokeCoreDispatcher(c);
-            //The next situation is possible:
-            //Callback was executed, but the rest of the body in Task.Run(inside CoreDispatcher.BeginInvokeInternal) has not been completed.
-            //As a result, the action in Task.Run is not collected and it has a link to ItemWithTrackableCallback.
-            //That is why we need to try to collect several times. If we did not collect after 10 attempts with a delay,
-            //it means that something is broken.
-            for (var i = 0; i < 10; i++)
-            {
-                CollectGarbage();
-                if (c.CollectedResetEvent.WaitOne(100))
-                {
-                    return;
-                }
-            }
-            Assert.IsTrue(c.IsCollected);
-        }
-
-        [TestMethod]
-        public void WebBrowser_Must_Be_Collected()
-        {
-            var c = new GarbageCollectorTracker();
-            CreateRemoveWebBrowser(c);
-            CollectGarbage();
-            Assert.IsTrue(c.IsCollected);
-        }
-
-        [TestMethod]
-        public void DependencyObject_Should_Release_InheritedContext()
-        {
-            var c = new GarbageCollectorTracker();
-            CreateDependencyObject(c);
-            CollectGarbage();
-
-            Assert.IsTrue(c.IsCollected);
-
-            DependencyObject CreateDependencyObject(GarbageCollectorTracker tracker)
-            {
-                var depObj = new DependencyObject();
-                _ = new MyFrameworkElement(tracker) { MyProperty = depObj };
-                return depObj;
-            }
-        }
-
-
-        [TestMethod]
-        public void FrameworkElement_Should_Release_TemplatedParent()
-        {
-            var c = new GarbageCollectorTracker();
-            var child = CreateFrameworkElementWithTemplateParent(c);
-            CollectGarbage();
-
-            Assert.IsTrue(c.IsCollected);
-
-            FrameworkElement CreateFrameworkElementWithTemplateParent(GarbageCollectorTracker tracker)
-            {
-                var templatedParent = new ControlWithTrackingComponent(tracker)
-                {
-                    Template = new ControlTemplate
-                    {
-                        TargetType = typeof(ControlWithTrackingComponent),
-                        Template = new TemplateContent(
-                        new XamlContext(),
-                        (owner, context) => new Border { TemplatedParent = owner }),
-                    }
-                };
-                templatedParent.ApplyTemplate();
-                var border = (Border)VisualTreeHelper.GetChild(templatedParent, 0);
-                templatedParent.Template = null;
-                return border;
-            }
-        }
-
-        private void CreateRemoveElement(GarbageCollectorTracker c)
-        {
-            var tc = new FrameworkElementWithTrackingComponent(c);
             var mainWindow = Application.Current.MainWindow;
             mainWindow.Content = tc;
             mainWindow.Content = new Grid();
         }
 
-        private void CreateRemoveWebBrowser(GarbageCollectorTracker c)
-        {
-            var tc = new WebBrowserWithTrackingComponent(c);
-            var mainWindow = Application.Current.MainWindow;
-            mainWindow.Content = tc;
-            mainWindow.Content = new Grid();
-        }
+        var c = new GCTracker();
+        CreateRemoveElement(c);
+        MemoryLeaksHelper.Collect();
 
-        private void InvokeCoreDispatcher(GarbageCollectorTracker c)
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void CoreDispatcher_Should_Release_Callback()
+    {
+        static void InvokeCoreDispatcher(GCTracker c)
         {
             var resetEvent = new ManualResetEvent(false);
             var trackableCallback = new ItemWithTrackableCallback(c, resetEvent);
@@ -147,32 +69,165 @@ namespace Runtime.OpenSilver.Tests.Maintenance.MemoryLeak
             resetEvent.WaitOne(5000);
         }
 
-        private static void CollectGarbage()
+        var c = new GCTracker();
+        InvokeCoreDispatcher(c);
+        //The next situation is possible:
+        //Callback was executed, but the rest of the body in Task.Run(inside CoreDispatcher.BeginInvokeInternal) has not been completed.
+        //As a result, the action in Task.Run is not collected and it has a link to ItemWithTrackableCallback.
+        //That is why we need to try to collect several times. If we did not collect after 10 attempts with a delay,
+        //it means that something is broken.
+        for (var i = 0; i < 10; i++)
         {
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+            MemoryLeaksHelper.Collect();
+            if (c.CollectedResetEvent.WaitOne(100))
+            {
+                return;
+            }
         }
 
-        private class MyFrameworkElement : FrameworkElementWithTrackingComponent
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void WebBrowser_Must_Be_Collected()
+    {
+        static void CreateRemoveWebBrowser(GCTracker c)
         {
-            public MyFrameworkElement(GarbageCollectorTracker gcTracker)
-                : base(gcTracker)
-            {
-            }
+            var tc = new WebBrowser();
+            MemoryLeaksHelper.SetTracker(tc, c);
 
-            public static readonly DependencyProperty MyPropertyProperty =
-                DependencyProperty.Register(
-                    nameof(MyProperty),
-                    typeof(object),
-                    typeof(MyFrameworkElement),
-                    null);
+            var mainWindow = Application.Current.MainWindow;
+            mainWindow.Content = tc;
+            mainWindow.Content = new Grid();
+        }
 
-            public object MyProperty
+        var c = new GCTracker();
+        CreateRemoveWebBrowser(c);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void PasswordBoxView_Must_Be_Collected()
+    {
+        static void CreateRemovePasswordBoxView(GCTracker tracker)
+        {
+            var pwbView = new PasswordBoxView(new PasswordBox());
+            MemoryLeaksHelper.SetTracker(pwbView, tracker);
+
+            Application.Current.MainWindow.Content = pwbView;
+            Application.Current.MainWindow.Content = null;
+        }
+
+        var c = new GCTracker();
+        CreateRemovePasswordBoxView(c);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void TextBoxView_Must_Be_Collected()
+    {
+        static void CreateRemoveTextBoxView(GCTracker tracker)
+        {
+            var tbView = new TextBoxView(new TextBox());
+            MemoryLeaksHelper.SetTracker(tbView, tracker);
+
+            Application.Current.MainWindow.Content = tbView;
+            Application.Current.MainWindow.Content = null;
+        }
+
+        var c = new GCTracker();
+        CreateRemoveTextBoxView(c);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void SizeChanged_Should_Not_Keep_FrameworkElement_Alive()
+    {
+        static void CreateFrameworkElement(GCTracker tracker)
+        {
+            var fe = new MyFrameworkElement();
+            fe.SizeChanged += (o, e) => { };
+            MemoryLeaksHelper.SetTracker(fe, tracker);
+
+            Application.Current.RootVisual = fe;
+            Application.Current.RootVisual = null;
+        }
+
+        var c = new GCTracker();
+        CreateFrameworkElement(c);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void DependencyObject_Should_Release_InheritedContext()
+    {
+        static DependencyObject CreateDependencyObject(GCTracker tracker)
+        {
+            var depObj = new DependencyObject();
+            var ctx = new MyFrameworkElement { MyProperty = depObj };
+            MemoryLeaksHelper.SetTracker(ctx, tracker);
+            return depObj;
+        }
+
+        var c = new GCTracker();
+        CreateDependencyObject(c);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);            
+    }
+
+    [TestMethod]
+    public void FrameworkElement_Should_Release_TemplatedParent()
+    {
+        static FrameworkElement CreateFrameworkElementWithTemplateParent(GCTracker tracker)
+        {
+            var templatedParent = new MyControl
             {
-                get => GetValue(MyPropertyProperty);
-                set => SetValue(MyPropertyProperty, value);
-            }
+                Template = new ControlTemplate
+                {
+                    TargetType = typeof(MyControl),
+                    Template = new TemplateContent(
+                    new XamlContext(),
+                    (owner, context) => new Border { TemplatedParent = owner }),
+                }
+            };
+            MemoryLeaksHelper.SetTracker(templatedParent, tracker);
+            templatedParent.ApplyTemplate();
+            var border = (Border)VisualTreeHelper.GetChild(templatedParent, 0);
+            templatedParent.Template = null;
+            return border;
+        }
+
+        var c = new GCTracker();
+        var child = CreateFrameworkElementWithTemplateParent(c);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    private class MyFrameworkElement : FrameworkElement
+    {
+        public static readonly DependencyProperty MyPropertyProperty =
+            DependencyProperty.Register(
+                nameof(MyProperty),
+                typeof(object),
+                typeof(MyFrameworkElement),
+                null);
+
+        public object MyProperty
+        {
+            get => GetValue(MyPropertyProperty);
+            set => SetValue(MyPropertyProperty, value);
         }
     }
+
+    private class MyControl : Control { }
 }

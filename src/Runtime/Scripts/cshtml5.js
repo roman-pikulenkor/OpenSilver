@@ -147,7 +147,7 @@ document.onkeyup = function (evt) {
     document.refreshKeyModifiers(evt);
 };
 
-document.jsObjRef = new Array();
+document.jsObjRef = {};
 document.callbackCounterForSimulator = 0;
 document.measureTextBlockElement = null;
 
@@ -499,16 +499,23 @@ document.eventCallback = function (callbackId, arguments, sync) {
     const idWhereCallbackArgsAreStored = "callback_args_" + document.callbackCounterForSimulator++;
     document.jsObjRef[idWhereCallbackArgsAreStored] = argsArray;
     if (sync) {
-        return window.onCallBack.OnCallbackFromJavaScript(callbackId, idWhereCallbackArgsAreStored, argsArray, true);
+        const v = window.onCallBack.OnCallbackFromJavaScript(callbackId, idWhereCallbackArgsAreStored, argsArray, true);
+        delete document.jsObjRef[idWhereCallbackArgsAreStored];
+        return v;
     } else {
         setTimeout(
             function () {
-                {
-                    window.onCallBack.OnCallbackFromJavaScript(callbackId, idWhereCallbackArgsAreStored, argsArray, false);
-                }
-            }
-            , 1);
+                window.onCallBack.OnCallbackFromJavaScript(callbackId, idWhereCallbackArgsAreStored, argsArray, false);
+            }, 1);
     }
+}
+
+document.getCallbackFunc = function (callbackId, sync, sliceArguments) {
+    return function () {
+        return document.eventCallback(callbackId,
+            (sliceArguments) ? Array.prototype.slice.call(arguments) : arguments,
+            sync);
+    };
 }
 
 document.callScriptSafe = function (referenceId, javaScriptToExecute, errorCallBackId) {

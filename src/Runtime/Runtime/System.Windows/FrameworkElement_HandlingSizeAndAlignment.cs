@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using CSHTML5.Internal;
 using OpenSilver.Internal;
 
@@ -539,7 +540,7 @@ namespace Windows.UI.Xaml
                                                 styleOfChildOfOuterDomElement.display != "none") // If Visibility is not 'Collapsed'
                                             {
                                                 // Note: the "if != 'span'" condition below prevents adding "display: table-cell" to elements inside a TextBlock, such as <Run>, <Span>, <Bold>, etc.
-                                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setDisplayTableCell($0)", childOfOuterDomElement.UniqueIdentifier);
+                                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setDisplayTableCell(""{childOfOuterDomElement.UniqueIdentifier}"")");
                                             }
                                         }
                                     }
@@ -572,7 +573,7 @@ namespace Windows.UI.Xaml
                                                 styleOfChildOfOuterDomElement.display != "none") // If Visibility is not 'Collapsed'
                                             {
                                                 // Note: the "if != 'span'" condition below prevents adding "display: table-cell" to elements inside a TextBlock, such as <Run>, <Span>, <Bold>, etc.
-                                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setDisplayTableCell($0)", childOfOuterDomElement.UniqueIdentifier);
+                                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setDisplayTableCell(""{childOfOuterDomElement.UniqueIdentifier}"")");
                                             }
                                         }
                                     }
@@ -604,7 +605,7 @@ namespace Windows.UI.Xaml
                                                 styleOfChildOfOuterDomElement.display != "none") // If Visibility is not 'Collapsed'
                                             {
                                                 // Note: the "if != 'span'" condition below prevents adding "display: table-cell" to elements inside a TextBlock, such as <Run>, <Span>, <Bold>, etc.
-                                                CSHTML5.Interop.ExecuteJavaScriptAsync(@"document.setDisplayTableCell($0)", childOfOuterDomElement.UniqueIdentifier);
+                                                CSHTML5.Interop.ExecuteJavaScriptFastAsync($@"document.setDisplayTableCell(""{childOfOuterDomElement.UniqueIdentifier}"")");
                                             }
                                         }
                                     }
@@ -1603,35 +1604,24 @@ namespace Windows.UI.Xaml
         {
             get
             {
-                if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this) && this.INTERNAL_OuterDomElement != null)
+                if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this) && INTERNAL_OuterDomElement != null)
                 {
-#if !CSHTML5NETSTANDARD
-                    if (IsRunningInJavaScript())
+                    if (IsCustomLayoutRoot || IsUnderCustomLayout)
                     {
-                        return this.INTERNAL_OuterDomElement.offsetWidth;
+                        return VisualBounds.Width;
                     }
-                    else
+                        
+                    try
                     {
-#endif
-                        if (this.IsCustomLayoutRoot || this.IsUnderCustomLayout)
-                        {
-                            return this.VisualBounds.Width;
-                        }
-                            
-                        try
-                        {
-                            return Convert.ToDouble(INTERNAL_HtmlDomManager.GetDomElementAttribute(this.INTERNAL_OuterDomElement, "offsetWidth"));
-                        }
-                        catch
-                        {
-                            return 0d;
-                        }
-#if !CSHTML5NETSTANDARD
+                        return INTERNAL_HtmlDomManager.GetDomElementAttributeInt32(INTERNAL_OuterDomElement, "offsetWidth");
                     }
-#endif
+                    catch
+                    {
+                        return 0d;
+                    }
                 }
-                else
-                    return 0d;
+                
+                return 0d;
             }
         }
 
@@ -1643,35 +1633,24 @@ namespace Windows.UI.Xaml
         {
             get
             {
-                if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this) && this.INTERNAL_OuterDomElement != null)
+                if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this) && INTERNAL_OuterDomElement != null)
                 {
-#if !CSHTML5NETSTANDARD
-                    if (IsRunningInJavaScript())
+                    if (IsCustomLayoutRoot || IsUnderCustomLayout)
                     {
-                        return this.INTERNAL_OuterDomElement.offsetHeight;
+                        return VisualBounds.Height;
                     }
-                    else
-                    {
-#endif
-                        if (this.IsCustomLayoutRoot || this.IsUnderCustomLayout)
-                        {
-                            return this.VisualBounds.Height;
-                        }
 
-                        try
-                        {
-                            return Convert.ToDouble(INTERNAL_HtmlDomManager.GetDomElementAttribute(this.INTERNAL_OuterDomElement, "offsetHeight"));
-                        }
-                        catch
-                        {
-                            return 0d;
-                        }
-#if !CSHTML5NETSTANDARD
+                    try
+                    {
+                        return INTERNAL_HtmlDomManager.GetDomElementAttributeInt32(INTERNAL_OuterDomElement, "offsetHeight");
                     }
-#endif
+                    catch
+                    {
+                        return 0d;
+                    }
                 }
-                else
-                    return 0d;
+                
+                return 0d;
             }
         }
 
@@ -1726,46 +1705,34 @@ namespace Windows.UI.Xaml
         {
             if (INTERNAL_VisualTreeManager.IsElementInVisualTree(this) && this.INTERNAL_OuterDomElement != null)
             {
-#if !CSHTML5NETSTANDARD
-                if (IsRunningInJavaScript())
+                if (!double.IsNaN(this.Width) && !double.IsNaN(this.Height))
+                    return new Size(this.Width, this.Height);
+                try
                 {
-                    double actualWidth = this.INTERNAL_OuterDomElement.offsetWidth;
-                    double actualHeight = this.INTERNAL_OuterDomElement.offsetHeight;
-                    return new Size(actualWidth, actualHeight);
-                }
-                else
-                {
-#endif
-                    if (!double.IsNaN(this.Width) && !double.IsNaN(this.Height))
-                        return new Size(this.Width, this.Height);
-                    try
+                    // Hack to improve the Simulator performance by making only one interop call rather than two:
+                    string concatenated = OpenSilver.Interop.ExecuteJavaScriptString(
+                        $"document.getActualWidthAndHeight({CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(INTERNAL_OuterDomElement)})");
+                    int sepIndex = concatenated != null ? concatenated.IndexOf('|') : -1;
+                    if (sepIndex > -1)
                     {
-                        // Hack to improve the Simulator performance by making only one interop call rather than two:
-                        string concatenated = CSHTML5.Interop.ExecuteJavaScript("document.getActualWidthAndHeight($0)", this.INTERNAL_OuterDomElement).ToString();
-                        int sepIndex = concatenated != null ? concatenated.IndexOf('|') : -1;
-                        if (sepIndex > -1)
-                        {
-                            string actualWidthAsString = concatenated.Substring(0, sepIndex);
-                            string actualHeightAsString = concatenated.Substring(sepIndex + 1);
-                            double actualWidth = double.Parse(actualWidthAsString, global::System.Globalization.CultureInfo.InvariantCulture); //todo: verify that the locale is OK. I think that JS by default always produces numbers in invariant culture (with "." separator).
-                            double actualHeight = double.Parse(actualHeightAsString, global::System.Globalization.CultureInfo.InvariantCulture); //todo: read note above
-                            return new Size(actualWidth, actualHeight);
-                        }
-                        else
-                        {
-                            return new Size(0d, 0d);
-                        }
+                        string actualWidthAsString = concatenated.Substring(0, sepIndex);
+                        string actualHeightAsString = concatenated.Substring(sepIndex + 1);
+                        double actualWidth = double.Parse(actualWidthAsString, CultureInfo.InvariantCulture); //todo: verify that the locale is OK. I think that JS by default always produces numbers in invariant culture (with "." separator).
+                        double actualHeight = double.Parse(actualHeightAsString, CultureInfo.InvariantCulture); //todo: read note above
+                        return new Size(actualWidth, actualHeight);
                     }
-                    catch
+                    else
                     {
                         return new Size(0d, 0d);
                     }
-#if !CSHTML5NETSTANDARD
                 }
-#endif
+                catch
+                {
+                    return new Size(0d, 0d);
+                }
             }
-            else
-                return new Size(0d, 0d);
+            
+            return new Size(0d, 0d);
         }
 
         /// <summary>
@@ -1790,14 +1757,16 @@ namespace Windows.UI.Xaml
                     try
                     {
                         // Hack to improve the Simulator performance by making only one interop call rather than two:
-                        string concatenated = CSHTML5.Interop.ExecuteJavaScript("(function() { var v = $0.getBoundingClientRect(); return v.width.toFixed(3) + '|' + v.height.toFixed(3) })()", this.INTERNAL_OuterDomElement).ToString();
+                        string sElement = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(this.INTERNAL_OuterDomElement);
+                        string concatenated = OpenSilver.Interop.ExecuteJavaScriptString(
+                            $"(function() {{ var v = {sElement}.getBoundingClientRect(); return v.width.toFixed(3) + '|' + v.height.toFixed(3) }})()");
                         int sepIndex = concatenated != null ? concatenated.IndexOf('|') : -1;
                         if (sepIndex > -1)
                         {
                             string actualWidthAsString = concatenated.Substring(0, sepIndex);
                             string actualHeightAsString = concatenated.Substring(sepIndex + 1);
-                            double actualWidth = double.Parse(actualWidthAsString, global::System.Globalization.CultureInfo.InvariantCulture); //todo: verify that the locale is OK. I think that JS by default always produces numbers in invariant culture (with "." separator).
-                            double actualHeight = double.Parse(actualHeightAsString, global::System.Globalization.CultureInfo.InvariantCulture); //todo: read note above
+                            double actualWidth = double.Parse(actualWidthAsString, CultureInfo.InvariantCulture); //todo: verify that the locale is OK. I think that JS by default always produces numbers in invariant culture (with "." separator).
+                            double actualHeight = double.Parse(actualHeightAsString, CultureInfo.InvariantCulture); //todo: read note above
                             return new Size(actualWidth, actualHeight);
                         }
                         else

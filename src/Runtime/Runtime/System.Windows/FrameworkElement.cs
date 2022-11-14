@@ -871,7 +871,7 @@ namespace Windows.UI.Xaml
                 }
                 else
                 {
-                    INTERNAL_HtmlDomManager.SetDomElementAttribute(domElementToEnableOrDisable, "disabled", true, forceSimulatorExecuteImmediately: true);
+                    INTERNAL_HtmlDomManager.SetDomElementAttribute(domElementToEnableOrDisable, "disabled", "true");
                 }
             }
         }
@@ -890,7 +890,7 @@ namespace Windows.UI.Xaml
                 {
                     while (enumerator.MoveNext())
                     {
-                        DependencyObject child = enumerator.Current as DependencyObject;
+                        FrameworkElement child = enumerator.Current as FrameworkElement;
                         if (child != null)
                         {
                             child.CoerceValue(property);

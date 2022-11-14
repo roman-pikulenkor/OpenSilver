@@ -1364,8 +1364,8 @@ document.ondblclick = null;
                 // Note: "none" disables scrolling, pinching and other gestures.
                 // It is supposed to not have any effect on the "TouchStart",
                 // "TouchMove", and "TouchEnd" events.
-                CSHTML5.Interop.ExecuteJavaScript("$0.style.touchAction = $1",
-                    element.INTERNAL_OuterDomElement, (bool)e.NewValue ? "auto" : "none");
+                OpenSilver.Interop.ExecuteJavaScriptVoid(
+                    $"{CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(element.INTERNAL_OuterDomElement)}.style.touchAction = \"{((bool)e.NewValue ? "auto" : "none")}\"");
             }
         }
 
@@ -1438,31 +1438,16 @@ document.ondblclick = null;
                 outerDivOfReferenceVisual = rootVisual.INTERNAL_OuterDomElement;
             }
 
-            double offsetLeft, offsetTop;
-            if (CSharpXamlForHtml5.Environment.IsRunningInJavaScript)
-            {
-                // ------- IN-BROWSER -------
-                var rectOfThisControl = ((dynamic)outerDivOfThisControl).getBoundingClientRect();
-                var rectOfReferenceVisual = ((dynamic)outerDivOfReferenceVisual).getBoundingClientRect();
-
-                offsetLeft = rectOfThisControl.left - rectOfReferenceVisual.left;
-                offsetTop = rectOfThisControl.top - rectOfReferenceVisual.top;
-            }
-            //#if !BRIDGE
-            else
-            {
-                // ------- SIMULATOR -------
-
-                // Hack to improve the Simulator performance by making only one interop call rather than two:
-                string concatenated = Convert.ToString(OpenSilver.Interop.ExecuteJavaScript("($0.getBoundingClientRect().left - $1.getBoundingClientRect().left) + '|' + ($0.getBoundingClientRect().top - $1.getBoundingClientRect().top)",
-                    outerDivOfThisControl, outerDivOfReferenceVisual));
-                int sepIndex = concatenated.IndexOf('|');
-                string offsetLeftAsString = concatenated.Substring(0, sepIndex);
-                string offsetTopAsString = concatenated.Substring(sepIndex + 1);
-                offsetLeft = Convert.ToDouble(offsetLeftAsString, CultureInfo.InvariantCulture);
-                offsetTop = Convert.ToDouble(offsetTopAsString, CultureInfo.InvariantCulture);
-            }
-            //#endif
+            // Hack to improve the Simulator performance by making only one interop call rather than two:
+            string sOuterDivOfControl = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(outerDivOfThisControl);
+            string sOuterDivOfReferenceVisual = CSHTML5.INTERNAL_InteropImplementation.GetVariableStringForJS(outerDivOfReferenceVisual);
+            string concatenated = OpenSilver.Interop.ExecuteJavaScriptString(
+                $"({sOuterDivOfControl}.getBoundingClientRect().left - {sOuterDivOfReferenceVisual}.getBoundingClientRect().left) + '|' + ({sOuterDivOfControl}.getBoundingClientRect().top - {sOuterDivOfReferenceVisual}.getBoundingClientRect().top)");
+            int sepIndex = concatenated.IndexOf('|');
+            string offsetLeftAsString = concatenated.Substring(0, sepIndex);
+            string offsetTopAsString = concatenated.Substring(sepIndex + 1);
+            double offsetLeft = Convert.ToDouble(offsetLeftAsString, CultureInfo.InvariantCulture);
+            double offsetTop = Convert.ToDouble(offsetTopAsString, CultureInfo.InvariantCulture);
 
             return new MatrixTransform(new Matrix(1, 0, 0, 1, offsetLeft, offsetTop));
         }
@@ -1823,10 +1808,10 @@ document.ondblclick = null;
             if (fe != null)
             {
                 if (fe.IsAutoWidthOnCustomLayoutInternal)
-                    availableSize.Width = Math.Max(this.DesiredSize.Width, savedLastSize.Width);
+                    availableSize.Width = this.DesiredSize.Width;
 
                 if (fe.IsAutoHeightOnCustomLayoutInternal)
-                    availableSize.Height = Math.Max(this.DesiredSize.Height, savedLastSize.Height);
+                    availableSize.Height = this.DesiredSize.Height;
             }
 
             Arrange(new Rect(availableSize));
