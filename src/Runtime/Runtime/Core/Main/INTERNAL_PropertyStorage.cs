@@ -95,8 +95,6 @@ namespace CSHTML5.Internal
             set { this._values[0] = value; }
         }
 
-        internal List<IPropertyChangedListener> PropertyListeners { get; set; }
-
         #endregion
     }
 

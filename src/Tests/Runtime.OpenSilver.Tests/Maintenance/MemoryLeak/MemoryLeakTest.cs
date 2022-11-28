@@ -15,16 +15,22 @@ using System;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenSilver.Internal.Xaml.Context;
-using System.Diagnostics;
+using System.Collections.ObjectModel;
+using System.Collections;
+using System.ComponentModel;
+using System.Linq;
+using System.Windows.Media.Effects;
 
 #if MIGRATION
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Threading;
 #else
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Core;
 #endif
@@ -147,6 +153,26 @@ public class MemoryLeakTest
     }
 
     [TestMethod]
+    public void Brush_Should_Not_Keep_Owner_Alive()
+    {
+        static void CreateRemoveControlWithBackground(GCTracker tracker, Brush brush)
+        {
+            var control = new MyControl { Background = brush };
+            MemoryLeaksHelper.SetTracker(control, tracker);
+
+            Application.Current.MainWindow.Content = control;
+            Application.Current.MainWindow.Content = null;
+        }
+
+        var c = new GCTracker();
+        var brush = new SolidColorBrush();
+        CreateRemoveControlWithBackground(c, brush);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
     public void SizeChanged_Should_Not_Keep_FrameworkElement_Alive()
     {
         static void CreateFrameworkElement(GCTracker tracker)
@@ -213,6 +239,124 @@ public class MemoryLeakTest
         Assert.IsTrue(c.IsCollected);
     }
 
+    [TestMethod]
+    public void CollectionChanged_Event_Should_Not_Keep_ItemsControl_Alive()
+    {
+        static void CreateItemsControl(GCTracker tracker, IEnumerable itemsSource)
+        {
+            var ic = new ItemsControl();
+            MemoryLeaksHelper.SetTracker(ic, tracker);
+            ic.ItemsSource = itemsSource;
+        }
+
+        var c = new GCTracker();
+        var itemsSource = new ObservableCollection<object>();
+        CreateItemsControl(c, itemsSource);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void PropertyChanged_Event_Should_Not_Keep_Binding_Target_Alive()
+    {
+        static void CreateBinding(GCTracker tracker, MyViewModel source)
+        {
+            var target = new MyFrameworkElement();
+            MemoryLeaksHelper.SetTracker(target, tracker);
+            var binding = new Binding("Prop1") { Source = source };
+            BindingOperations.SetBinding(target, MyFrameworkElement.MyPropertyProperty, binding);
+
+            Assert.AreEqual(target.MyProperty, source.Prop1);
+        }
+
+        var c = new GCTracker();
+        var source = new MyViewModel { Prop1 = "HELLO" };
+        CreateBinding(c, source);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void PropertyChanged_Event_Should_Not_Keep_Binding_Target_Alive_Indexer()
+    {
+        static void CreateBinding(GCTracker tracker, MyViewModel source)
+        {
+            var target = new MyFrameworkElement();
+            MemoryLeaksHelper.SetTracker(target, tracker);
+            var binding = new Binding("Prop2[2]") { Source = source };
+            BindingOperations.SetBinding(target, MyFrameworkElement.MyPropertyProperty, binding);
+
+            Assert.AreEqual((int)target.MyProperty, source.Prop2[2]);
+        }
+
+        var c = new GCTracker();
+        var source = new MyViewModel { Prop1 = "HELLO", Prop2 = new ObservableCollection<int> { 1, 2, 3, 4 } };
+        CreateBinding(c, source);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void ErrorsChanged_Event_Should_Not_Keep_Binding_Target_Alive()
+    {
+        static void CreateBinding(GCTracker tracker, MyViewModelWithValidation source)
+        {
+            var target = new MyFrameworkElement();
+            MemoryLeaksHelper.SetTracker(target, tracker);
+            var binding = new Binding("Prop1") { Source = source, ValidatesOnNotifyDataErrors = true };
+            BindingOperations.SetBinding(target, MyFrameworkElement.MyPropertyProperty, binding);
+        }
+
+        var c = new GCTracker();
+        var source = new MyViewModelWithValidation();
+        CreateBinding(c, source);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void DependencyProperty_Listener_Should_Not_Keep_Binding_Target_Alive()
+    {
+        static void CreateBinding(GCTracker tracker, MyViewModel source)
+        {
+            var target = new MyFrameworkElement();
+            MemoryLeaksHelper.SetTracker(target, tracker);
+            var binding = new Binding("Prop3") { Source = source };
+            BindingOperations.SetBinding(target, MyFrameworkElement.MyPropertyProperty, binding);
+
+            Assert.AreEqual((string)target.MyProperty, (string)source.Prop3);
+        }
+
+        var c = new GCTracker();
+        var source = new MyViewModel { Prop3 = "SomeValue" };
+        CreateBinding(c, source);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
+    [TestMethod]
+    public void Effect_Should_Not_Keep_Owner_Alive()
+    {
+        static void CreateElementAndApplyEffect(GCTracker tracker, Effect effect)
+        {
+            var element = new MyControl();
+            MemoryLeaksHelper.SetTracker(element, tracker);
+            element.Effect = effect;
+        }
+
+        var c = new GCTracker();
+        var effect = new BlurEffect();
+        CreateElementAndApplyEffect(c, effect);
+        MemoryLeaksHelper.Collect();
+
+        Assert.IsTrue(c.IsCollected);
+    }
+
     private class MyFrameworkElement : FrameworkElement
     {
         public static readonly DependencyProperty MyPropertyProperty =
@@ -230,4 +374,58 @@ public class MemoryLeakTest
     }
 
     private class MyControl : Control { }
+
+    private class MyViewModel : DependencyObject, INotifyPropertyChanged
+    {
+        private string _prop1;
+
+        public string Prop1
+        {
+            get => _prop1;
+            set
+            {
+                _prop1 = value;
+                OnPropertyChanged(nameof(Prop1));
+            }
+        }
+
+        private ObservableCollection<int> _prop2;
+
+        public ObservableCollection<int> Prop2
+        {
+            get => _prop2;
+            set
+            {
+                _prop2 = value;
+                OnPropertyChanged(nameof(Prop2));
+            }
+        }
+
+        public static readonly DependencyProperty Prop3Property =
+            DependencyProperty.Register(
+                nameof(Prop3),
+                typeof(object),
+                typeof(MyViewModel),
+                null);
+
+        public object Prop3
+        {
+            get => GetValue(Prop3Property);
+            set => SetValue(Prop3Property, value);
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged(string propertyName)
+            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    private class MyViewModelWithValidation : MyViewModel, INotifyDataErrorInfo
+    {
+        public bool HasErrors => false;
+
+        public event EventHandler<DataErrorsChangedEventArgs> ErrorsChanged;
+
+        public IEnumerable GetErrors(string propertyName) => Enumerable.Empty<object>();
+    }
 }

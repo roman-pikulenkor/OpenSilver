@@ -21,12 +21,8 @@ using Windows.UI.Xaml;
 
 namespace OpenSilver.Internal.Data
 {
-    internal interface IPropertyChangedListener
+    internal interface IDependencyPropertyChangedListener
     {
-        DependencyProperty Property { get; set; }
-
-        void OnPropertyChanged(DependencyObject sender, IDependencyPropertyChangedEventArgs args);
-        
-        void Detach();
+        void OnPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args);
     }
 }
