@@ -261,11 +261,6 @@ namespace Windows.UI.Xaml
         internal Action INTERNAL_DeferredRenderingWhenControlBecomesVisible;
         internal Action INTERNAL_DeferredLoadingWhenControlBecomesVisible;
 
-        /// <summary>
-        /// Dictionary that helps link the validationErrors to the BindingExpressions for managing the errors.
-        /// </summary>
-        internal Dictionary<BindingExpression, ValidationError> INTERNAL_ValidationErrorsDictionary;
-
         public Size RenderSize { get { return VisualBounds.Size; } }
 
         public Size DesiredSize { get; private set; }
@@ -522,7 +517,15 @@ namespace Windows.UI.Xaml
                 typeof(UIElement),
                 new PropertyMetadata(null, OnEffectChanged)
                 {
-                    MethodToUpdateDom = (d, e) => ((Effect)e)?.Render((UIElement)d)
+                    MethodToUpdateDom2 = (d, oldValue, newValue) =>
+                    {
+                        var uie = (UIElement)d;
+                        if (oldValue is Effect oldEffect)
+                        {
+                            oldEffect.Clean(uie);
+                        }
+                        ((Effect)newValue)?.Render(uie);
+                    }
                 });
 
         // todo: we may add the support for multiple effects on the same 

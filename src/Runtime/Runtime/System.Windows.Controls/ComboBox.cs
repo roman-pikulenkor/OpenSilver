@@ -1,5 +1,4 @@
 ﻿
-
 /*===================================================================================
 * 
 *   Copyright (c) Userware/OpenSilver.net
@@ -12,9 +11,9 @@
 *  
 \*====================================================================================*/
 
-
 using DotNetForHtml5.Core;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 #if MIGRATION
@@ -25,6 +24,8 @@ using System.Windows.Input;
 using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Input;
+using KeyEventArgs = Windows.UI.Xaml.Input.KeyRoutedEventArgs;
+using Key = Windows.System.VirtualKey;
 #endif
 
 #if MIGRATION
@@ -58,7 +59,7 @@ namespace Windows.UI.Xaml.Controls
         private ToggleButton _dropDownToggle;
         private ContentPresenter _contentPresenter;
         private FrameworkElement _emptyContent;
-        private bool _suppressCloseOnOutsideClick;
+        private ItemInfo _highlightedInfo;
 
         [Obsolete("ComboBox does not support Native ComboBox. Use 'CSHTML5.Native.Html.Controls.NativeComboBox' instead.")]
         public bool UseNativeComboBox
@@ -158,11 +159,11 @@ namespace Windows.UI.Xaml.Controls
             {
                 _popup.PlacementTarget = null;
                 _popup.OutsideClick -= new EventHandler<OutsideClickEventArgs>(OnOutsideClick);
-                _popup.ClosedDueToOutsideClick -= new EventHandler(OnPopupClosedDueToOutsideClick); // Note: we do this here rather than at "OnDetached" because it may happen that the popup is closed after the ComboBox has been removed from the visual tree (in which case, when putting it back into the visual tree, we want the drop down to be in its initial closed state).
             }
 
             if (_popupChild != null)
             {
+                _popupChild.KeyDown -= new KeyEventHandler(OnPopupKeyDown);
                 _popupChild.TextInput -= new TextCompositionEventHandler(OnPopupTextInput);
                 _popupChild = null;
             }
@@ -188,11 +189,11 @@ namespace Windows.UI.Xaml.Controls
                 // Make sure the popup gets closed when the user clicks outside the combo box, and listen to the Closed event in order to update the drop-down toggle:
                 _popup.StayOpen = false;
                 _popup.OutsideClick += new EventHandler<OutsideClickEventArgs>(OnOutsideClick);
-                _popup.ClosedDueToOutsideClick += new EventHandler(OnPopupClosedDueToOutsideClick);
 
                 _popupChild = _popup.Child;
                 if (_popupChild != null)
                 {
+                    _popupChild.KeyDown += new KeyEventHandler(OnPopupKeyDown);
                     _popupChild.TextInput += new TextCompositionEventHandler(OnPopupTextInput);
                 }
             }
@@ -216,6 +217,61 @@ namespace Windows.UI.Xaml.Controls
 
             UpdatePresenter();
         }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            if (e.Handled)
+            {
+                return;
+            }
+
+            switch (e.Key)
+            {
+                case Key.Up:
+                    if (IsDropDownOpen)
+                    {
+                        NavigateToPrev();
+                    }
+                    else
+                    {
+                        SelectPrev();
+                    }
+                    break;
+
+                case Key.Down:
+                    if (IsDropDownOpen)
+                    {
+                        NavigateToNext();
+                    }
+                    else
+                    {
+                        SelectNext();
+                    }
+                    break;
+
+                case Key.Escape:
+                    if (IsDropDownOpen)
+                    {
+                        KeyboardCloseDropDown(false);
+                    }
+                    break;
+
+                case Key.Enter:
+                    if (IsDropDownOpen)
+                    {
+                        KeyboardCloseDropDown(true);
+                    }
+                    else
+                    {
+                        IsDropDownOpen = true;
+                    }
+                    break;
+            }
+        }
+
+        private void OnPopupKeyDown(object sender, KeyEventArgs e) => OnKeyDown(e);
 
         /// <summary>
         /// Provides handling for the <see cref="UIElement.MouseLeftButtonDown"/> event
@@ -244,7 +300,6 @@ namespace Windows.UI.Xaml.Controls
 
             e.Handled = true;
 
-            _suppressCloseOnOutsideClick = true;
             IsDropDownOpen = true;
         }
 
@@ -287,6 +342,8 @@ namespace Windows.UI.Xaml.Controls
         {
             bool returnValue = base.FocusItem(info);
 
+            _highlightedInfo = info.Container is ComboBoxItem ? info : null;
+
             if (!IsDropDownOpen)
             {
                 int index = info.Index;
@@ -300,8 +357,145 @@ namespace Windows.UI.Xaml.Controls
 
                 returnValue = true;
             }
-
+            
             return returnValue;
+        }
+
+        /// <summary>
+        /// Called to close the DropDown using the keyboard.
+        /// </summary>
+        private void KeyboardCloseDropDown(bool commitSelection)
+        {
+            KeyboardToggleDropDown(false /* openDropDown */, commitSelection);
+        }
+
+        private void KeyboardToggleDropDown(bool openDropDown, bool commitSelection)
+        {
+            // Close the dropdown and commit the selection if requested.
+            // Make sure to set the selection after the dropdown has closed
+            // so we don't trigger any unnecessary navigation as a result
+            // of changing the selection.
+            ItemInfo infoToSelect = null;
+            if (commitSelection)
+            {
+                infoToSelect = _highlightedInfo;
+            }
+
+            IsDropDownOpen = openDropDown;
+
+            if (openDropDown == false && commitSelection && (infoToSelect != null))
+            {
+                SelectionChange.SelectJustThisItem(infoToSelect, true /* assumeInItemsCollection */);
+            }
+        }
+
+        private void SelectPrev()
+        {
+            if (Items.Count > 0)
+            {
+                int selectedIndex = InternalSelectedIndex;
+
+                // Search backwards from SelectedIndex - 1 but don't start before the beginning.
+                // If SelectedIndex is less than 0, there is nothing to select before this item.
+                if (selectedIndex > 0)
+                {
+                    SelectItemHelper(selectedIndex - 1, -1, -1);
+                }
+            }
+        }
+
+        private void SelectNext()
+        {
+            int count = Items.Count;
+            if (count > 0)
+            {
+                int selectedIndex = InternalSelectedIndex;
+
+                // Search forwards from SelectedIndex + 1 but don't start past the end.
+                // If SelectedIndex is before the last item then there is potentially
+                // something afterwards that we could select.
+                if (selectedIndex < count - 1)
+                {
+                    SelectItemHelper(selectedIndex + 1, 1, count);
+                }
+            }
+        }
+
+        private void NavigateToPrev()
+        {
+            if (Items.Count > 0)
+            {
+                int focusedIndex = _highlightedInfo != null ? _highlightedInfo.Index : -1;
+                if (focusedIndex > 0)
+                {
+                    ItemInfo info = GetNextItemInfoHelper(focusedIndex - 1, -1, -1);
+                    if (info != null)
+                    {
+                        FocusItem(info);
+                    }
+                }
+            }
+        }
+
+        private void NavigateToNext()
+        {
+            int count = Items.Count;
+            if (count > 0)
+            {
+                int focusedIndex = _highlightedInfo != null ? _highlightedInfo.Index : -1;
+                if (focusedIndex < count - 1)
+                {
+                    ItemInfo info = GetNextItemInfoHelper(focusedIndex + 1, 1, count);
+                    if (info != null)
+                    {
+                        FocusItem(info);
+                    }
+                }
+            }
+        }
+
+        private void SelectItemHelper(int startIndex, int increment, int stopIndex)
+        {
+            ItemInfo info = GetNextItemInfoHelper(startIndex, increment, stopIndex);
+            if (info != null)
+            {
+                SelectionChange.SelectJustThisItem(info, true /* assumeInItemsCollection */);
+            }
+        }
+
+        // Walk in the specified direction until we get to a selectable
+        // item or to the stopIndex.
+        // NOTE: stopIndex is not inclusive (it should be one past the end of the range)
+        private ItemInfo GetNextItemInfoHelper(int startIndex, int increment, int stopIndex)
+        {
+            Debug.Assert((increment > 0 && startIndex <= stopIndex) || (increment < 0 && startIndex >= stopIndex), "Infinite loop detected");
+
+            for (int i = startIndex; i != stopIndex; i += increment)
+            {
+                // If the item is selectable and the wrapper is selectable, select it.
+                // Need to check both because the user could set any combination of
+                // IsSelectable and IsEnabled on the item and wrapper.
+                object item = Items[i];
+                DependencyObject container = ItemContainerGenerator.ContainerFromIndex(i);
+                if (IsSelectableHelper(item) && IsSelectableHelper(container))
+                {
+                    return NewItemInfo(item, container, i);
+                }
+            }
+
+            return null;
+        }
+
+        private bool IsSelectableHelper(object o)
+        {
+            // If o is not a DependencyObject, it is just a plain
+            // object and must be selectable and enabled.
+            if (o is not FrameworkElement fe)
+            {
+                return true;
+            }
+            // It's selectable if IsSelectable is true and IsEnabled is true.
+            return (bool)fe.GetValue(IsEnabledProperty);
         }
 
         private void OnPopupTextInput(object sender, TextCompositionEventArgs e) => OnTextInput(e);
@@ -476,15 +670,8 @@ namespace Windows.UI.Xaml.Controls
 
         private void OnOutsideClick(object sender, OutsideClickEventArgs e)
         {
-            if (_suppressCloseOnOutsideClick)
-            {
-                e.Handled = true;
-                _suppressCloseOnOutsideClick = false;
-            }
-        }
+            e.Handled = true;
 
-        private void OnPopupClosedDueToOutsideClick(object sender, EventArgs e)
-        {
             IsDropDownOpen = false;
         }
 

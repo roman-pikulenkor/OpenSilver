@@ -448,16 +448,19 @@ document._attachEventListeners = function (element, handler, isFocusable) {
 
     const store = view._eventsStore = {};
     store.isFocusable = isFocusable;
+    store.enableTouch = isTouchDevice();
 
     view.addEventListener('mousedown', store['mousedown'] = bubblingEventHandler);
-    view.addEventListener('touchstart', store['touchstart'] = bubblingEventHandler, { passive: true });
     view.addEventListener('mouseup', store['mouseup'] = bubblingEventHandler);
-    view.addEventListener('touchend', store['touchend'] = bubblingEventHandler);
     view.addEventListener('mousemove', store['mousemove'] = bubblingEventHandler);
-    view.addEventListener('touchmove', store['touchmove'] = bubblingEventHandler, { passive: true });
     view.addEventListener('wheel', store['wheel'] = bubblingEventHandler, { passive: true });
     view.addEventListener('mouseenter', store['mouseenter'] = handler);
     view.addEventListener('mouseleave', store['mouseleave'] = handler);
+    if (store.enableTouch) {
+        view.addEventListener('touchstart', store['touchstart'] = bubblingEventHandler, { passive: true });
+        view.addEventListener('touchend', store['touchend'] = bubblingEventHandler);
+        view.addEventListener('touchmove', store['touchmove'] = bubblingEventHandler, { passive: true });
+    }
     if (isFocusable) {
         view.addEventListener('keypress', store['keypress'] = bubblingEventHandler);
         view.addEventListener('input', store['input'] = bubblingEventHandler);
@@ -474,14 +477,16 @@ document._removeEventListeners = function (element) {
 
     const store = view._eventsStore;
     view.removeEventListener('mousedown', store['mousedown']);
-    view.removeEventListener('touchstart', store['touchstart']);
     view.removeEventListener('mouseup', store['mouseup']);
-    view.removeEventListener('touchend', store['touchend']);
     view.removeEventListener('mousemove', store['mousemove']);
-    view.removeEventListener('touchmove', store['touchmove']);
     view.removeEventListener('wheel', store['wheel']);
     view.removeEventListener('mouseenter', store['mouseenter']);
     view.removeEventListener('mouseleave', store['mouseleave']);
+    if (store.enableTouch) {
+        view.removeEventListener('touchstart', store['touchstart']);
+        view.removeEventListener('touchend', store['touchend']);
+        view.removeEventListener('touchmove', store['touchmove']);
+    }
     if (store.isFocusable) {
         view.removeEventListener('keypress', store['keypress']);
         view.removeEventListener('input', store['input']);
@@ -648,18 +653,7 @@ document.measureTextBlock = function (uid, textWrapping, padding, width, maxWidt
     if (element && elToMeasure) {
         var computedStyle = getComputedStyle(elToMeasure);
 
-        var runElement = element.firstElementChild;
-        if (runElement != null) {
-            var child = elToMeasure;
-            if (child.hasChildNodes()) {
-                while (child.hasChildNodes()) {
-                    child = child.firstChild;
-                }
-                runElement.innerHTML = child.parentElement.innerHTML.length == 0 ? 'A' : child.parentElement.innerHTML;
-            } else {
-                runElement.innerHTML = 'A';
-            }
-        }
+        element.innerHTML = elToMeasure.innerHTML;
 
         element.style.fontSize = computedStyle.fontSize;
         element.style.fontWeight = computedStyle.fontWeight;
@@ -677,7 +671,11 @@ document.measureTextBlock = function (uid, textWrapping, padding, width, maxWidt
         element.style.width = width;
         element.style.maxWidth = maxWidth;
 
-        return element.offsetWidth + "|" + element.offsetHeight;
+        const size = element.offsetWidth + "|" + element.offsetHeight;
+
+        element.innerHTML = '';
+
+        return size;
     }
 
     return "0|0";
@@ -1377,4 +1375,13 @@ window.elementsFromPointOpensilver = function (x, y, element) {
 
 function PerformHitTest(x, y, rect) {
     return rect.x <= x && x <= rect.x + rect.width && rect.y <= y && y <= rect.y + rect.height;
+}
+
+//------------------------------
+// Just to check if client browser support touch
+//------------------------------
+const isTouchDevice = () => {
+    return (('ontouchstart' in window) ||
+        (navigator.maxTouchPoints > 0) ||
+        (navigator.msMaxTouchPoints > 0));
 }
