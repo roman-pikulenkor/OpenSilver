@@ -680,7 +680,7 @@ if({sE}.target != {sDiv}) {{
         {
             string uniqueIdentifier = ((INTERNAL_HtmlDomElementReference)this.INTERNAL_OuterDomElement).UniqueIdentifier;
             Size TextSize = Application.Current.TextMeasurementService.MeasureTextBlock(uniqueIdentifier, Host.TextWrapping, Margin, availableSize.Width);
-            if (String.IsNullOrEmpty(Host.Text))
+            if (String.IsNullOrEmpty(Host.Text) && this.HorizontalAlignment != HorizontalAlignment.Stretch)
                 TextSize.Width = 1;
             return TextSize;
         }
