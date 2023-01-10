@@ -1,4 +1,3 @@
-﻿
 
 /*===================================================================================
 * 
@@ -12,21 +11,28 @@
 *  
 \*====================================================================================*/
 
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 #if MIGRATION
-namespace System.Windows
+namespace System.Windows.Media
 #else
-namespace Windows.UI.Xaml
+namespace Windows.UI.Xaml.Media
 #endif
 {
-    interface ICanConvertToCSSValue
-    {
-        object ConvertToCSSValue();
-    }
+    /// <summary>
+    /// Describes how content is positioned vertically in a container.
+    /// </summary>
+    public enum AlignmentY
+	{
+        /// <summary>
+        /// The contents align toward the upper edge of the container.
+        /// </summary>
+        Top = 0,
+        /// <summary>
+        /// The contents align toward the center of the container.
+        /// </summary>
+		Center = 1,
+        /// <summary>
+        /// The contents align toward the lower edge of the container.
+        /// </summary>
+		Bottom = 2
+	}
 }

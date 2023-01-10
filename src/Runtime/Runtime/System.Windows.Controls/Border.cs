@@ -161,7 +161,7 @@ namespace Windows.UI.Xaml.Controls
 
             if (this.BorderBrush == null)
             {
-                INTERNAL_PropertyStore.ApplyCssChanges(null, null, Border.BorderBrushProperty.GetMetadata(typeof(Border)), this);
+                UpdateDomOnBorderBrushChanged(this, null, null);
             }
 
             if (!this.INTERNAL_EnableProgressiveLoading)
@@ -204,18 +204,11 @@ namespace Windows.UI.Xaml.Controls
                 typeof(Border),
                 new PropertyMetadata((object)null)
                 {
-                    GetCSSEquivalent = (instance) => new CSSEquivalent
-                    {
-                        Name = new List<string> { "background", "backgroundColor", "backgroundColorAlpha" },
-                    },
-                    MethodToUpdateDom = (d, e) =>
+                    MethodToUpdateDom2 = (d, oldValue, newValue) =>
                     {
                         var border = (Border)d;
-                        if (e is ImageBrush imageBrush)
-                        {
-                            Panel.SetImageBrushRelatedBackgroundProperties(border, imageBrush);
-                        }
-                        UIElement.SetPointerEvents(border);
+                        _ = Panel.RenderBackgroundAsync(border, (Brush)newValue);
+                        SetPointerEvents(border);
                     },
                 });
 
@@ -238,33 +231,54 @@ namespace Windows.UI.Xaml.Controls
                 typeof(Border),
                 new PropertyMetadata((object)null)
                 {
-                    GetCSSEquivalents = (instance) =>
-                    {
-                        var cssList = new List<CSSEquivalent>();
-                        var brush = ((Border)instance).BorderBrush;
-                        if (brush is LinearGradientBrush)
-                        {
-                            cssList.Add(new CSSEquivalent
-                            {
-                                Name = new List<string> { "border-image-source" },
-                            });
-                            cssList.Add(new CSSEquivalent
-                            {
-                                Name = new List<string> { "border-image-slice" },
-                                Value = (d, value) => { return "1"; },
-                            });
-                        }
-                        else
-                        {
-                            cssList.Add(new CSSEquivalent
-                            {
-                                Name = new List<string> { "borderColor" },
-                                Value = (inst, value) => value ?? "transparent"
-                            });
-                        }
-                        return cssList;
-                    }
+                    MethodToUpdateDom2 = UpdateDomOnBorderBrushChanged,
                 });
+
+        private static void UpdateDomOnBorderBrushChanged(DependencyObject d, object oldValue, object newValue)
+        {
+            var border = (Border)d;
+            var cssStyle = INTERNAL_HtmlDomManager.GetFrameworkElementOuterStyleForModification(border);
+            switch (newValue)
+            {
+                case SolidColorBrush solid:
+                    if (oldValue is GradientBrush)
+                    {
+                        cssStyle.borderImageSource = string.Empty;
+                        cssStyle.borderImageSlice = string.Empty;
+                    }
+                    cssStyle.borderColor = solid.INTERNAL_ToHtmlString();
+                    break;
+
+                case LinearGradientBrush linear:
+                    if (oldValue is SolidColorBrush)
+                    {
+                        cssStyle.borderColor = string.Empty;
+                    }
+                    cssStyle.borderImageSource = linear.INTERNAL_ToHtmlString(border);
+                    cssStyle.borderImageSlice = "1";
+                    break;
+
+                case RadialGradientBrush radial:
+                    if (oldValue is SolidColorBrush)
+                    {
+                        cssStyle.borderColor = string.Empty;
+                    }
+                    cssStyle.borderImageSource = radial.INTERNAL_ToHtmlString(border);
+                    cssStyle.borderImageSlice = "1";
+                    break;
+
+                case null:
+                    cssStyle.borderColor = "transparent";
+                    cssStyle.borderImageSource = string.Empty;
+                    cssStyle.borderImageSlice = string.Empty;
+                    break;
+
+                default:
+                    // ImageBrush and custom brushes are not supported.
+                    // Keep using old brush.
+                    break;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the thickness of the border.

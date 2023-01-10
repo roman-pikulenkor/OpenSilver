@@ -1,5 +1,4 @@
 ﻿
-
 /*===================================================================================
 * 
 *   Copyright (c) Userware/OpenSilver.net
@@ -12,13 +11,11 @@
 *  
 \*====================================================================================*/
 
-
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.ComponentModel;
 using System.Windows.Markup;
+using OpenSilver.Internal;
 
 #if MIGRATION
 namespace System.Windows.Media
@@ -30,11 +27,9 @@ namespace Windows.UI.Xaml.Media
     /// Describes the location and color of a transition point in a gradient.
     /// </summary>
     [ContentProperty("Color")]
-    public sealed partial class GradientStop : DependencyObject, ICloneOnAnimation
+    public sealed class GradientStop : DependencyObject
     {
         internal Brush INTERNAL_ParentBrush;
-
-        private bool _isAlreadyAClone = false;
 
         // Returns:
         //     The color of the gradient stop. The default is Transparent.
@@ -99,20 +94,10 @@ namespace Windows.UI.Xaml.Media
         public static readonly DependencyProperty OffsetProperty =
             DependencyProperty.Register("Offset", typeof(double), typeof(GradientStop), new PropertyMetadata(0d));
 
-        public object Clone()
-        {
-            return new GradientStop
-            {
-                Color = this.Color,
-                Offset = this.Offset,
-                _isAlreadyAClone = true,
-            };
-        }
+        public object Clone() => new GradientStop { Color = Color, Offset = Offset };
 
-        public bool IsAlreadyAClone()
-        {
-            return _isAlreadyAClone;
-        }
-
+        [Obsolete(Helper.ObsoleteMemberMessage)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool IsAlreadyAClone() => false;
     }
 }

@@ -83,44 +83,7 @@ namespace Windows.UI.Xaml.Media.Animation
         internal override void GetTargetInformation(IterationParameters parameters)
         {
             _parameters = parameters;
-            DependencyObject target;
-            PropertyPath propertyPath;
-            DependencyObject targetBeforePath;
-            GetPropertyPathAndTargetBeforePath(parameters, out targetBeforePath, out propertyPath);
-            DependencyObject parentElement = targetBeforePath; //this will be the parent of the clonable element (if any).
-            foreach (Tuple<DependencyObject, DependencyProperty, int?> element in GoThroughElementsToAccessProperty(propertyPath, targetBeforePath))
-            {
-                DependencyObject depObject = element.Item1;
-                DependencyProperty depProp = element.Item2;
-                int? index = element.Item3;
-                if (depObject is ICloneOnAnimation)
-                {
-                    if (!((ICloneOnAnimation)depObject).IsAlreadyAClone())
-                    {
-                        object clone = ((ICloneOnAnimation)depObject).Clone();
-                        if (index != null)
-                        {
-#if BRIDGE
-                            parentElement.GetType().GetProperty("Item").SetValue(parentElement, clone, new object[] { index });
-#else
-                            //JSIL does not support SetValue(object, object, object[])
-#endif
-                        }
-                        else
-                        {
-                            parentElement.SetValue(depProp, clone);
-                        }
-                    }
-                    break;
-                }
-                else
-                {
-                    parentElement = depObject;
-                }
-            }
-
-            GetTargetElementAndPropertyInfo(parameters, out target, out propertyPath);
-
+            GetTargetElementAndPropertyInfo(parameters, out DependencyObject target, out PropertyPath propertyPath);
             _propertyContainer = target;
             _targetProperty = propertyPath;
             _propDp = GetProperty(_propertyContainer, _targetProperty);
@@ -152,8 +115,15 @@ namespace Windows.UI.Xaml.Media.Animation
                     if (cssEquivalent != null)
                     {
                         cssEquivalentExists = true;
-                        TryStartAnimation(_propertyContainer, cssEquivalent, From, To, Duration, EasingFunction, specificGroupName, _propDp,
-                                          OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID));
+                        TryStartAnimation(_propertyContainer,
+                            cssEquivalent,
+                            From,
+                            To,
+                            Duration,
+                            EasingFunction,
+                            specificGroupName,
+                            _propDp,
+                            GetAnimationCompletedCallback(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID));
                     }
                 }
                 if (propertyMetadata.GetCSSEquivalents != null)
@@ -167,8 +137,15 @@ namespace Windows.UI.Xaml.Media.Animation
                         {
                             if (isFirst)
                             {
-                                bool updateIsFirst = TryStartAnimation(_propertyContainer, equivalent, From, To, Duration, EasingFunction, specificGroupName, _propDp,
-                                                                       OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID));
+                                bool updateIsFirst = TryStartAnimation(_propertyContainer,
+                                    equivalent,
+                                    From,
+                                    To,
+                                    Duration,
+                                    EasingFunction,
+                                    specificGroupName,
+                                    _propDp,
+                                    GetAnimationCompletedCallback(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID));
                                 if (updateIsFirst)
                                 {
                                     isFirst = false;
@@ -176,40 +153,59 @@ namespace Windows.UI.Xaml.Media.Animation
                             }
                             else
                             {
-                                TryStartAnimation(_propertyContainer, equivalent, From, To, Duration, EasingFunction, specificGroupName, _propDp,
-                                                  OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID));
+                                TryStartAnimation(_propertyContainer,
+                                    equivalent,
+                                    From,
+                                    To,
+                                    Duration,
+                                    EasingFunction,
+                                    specificGroupName,
+                                    _propDp,
+                                    GetAnimationCompletedCallback(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID));
                             }
                         }
                         else
                         {
-                            OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID)();
+                            OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID);
                         }
                     }
                 }
                 if (!cssEquivalentExists)
                 {
-                    OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID)();
+                    OnAnimationCompleted(parameters, isLastLoop, castedValue, _propertyContainer, _targetProperty, _animationID);
                 }
             }
             else
             {
-                OnAnimationCompleted(parameters, isLastLoop, To, _propertyContainer, _targetProperty, _animationID)();
+                OnAnimationCompleted(parameters, isLastLoop, To, _propertyContainer, _targetProperty, _animationID);
             }
         }
 
-        private Action OnAnimationCompleted(IterationParameters parameters, bool isLastLoop, object value, DependencyObject target, PropertyPath propertyPath, Guid callBackGuid)
+        private void OnAnimationCompleted(IterationParameters parameters,
+            bool isLastLoop,
+            object value,
+            DependencyObject target,
+            PropertyPath propertyPath,
+            Guid callBackGuid)
         {
-            return () =>
+            if (!_isUnapplied)
             {
-                if (!this._isUnapplied)
+                if (isLastLoop && _animationID == callBackGuid)
                 {
-                    if (isLastLoop && _animationID == callBackGuid)
-                    {
-                        AnimationHelpers.ApplyValue(target, propertyPath, value);
-                    }
-                    OnIterationCompleted(parameters);
+                    AnimationHelpers.ApplyValue(target, propertyPath, value);
                 }
-            };
+                OnIterationCompleted(parameters);
+            }
+        }
+
+        private Action GetAnimationCompletedCallback(IterationParameters parameters,
+            bool isLastLoop,
+            object value,
+            DependencyObject target,
+            PropertyPath propertyPath,
+            Guid callBackGuid)
+        {
+            return () => OnAnimationCompleted(parameters, isLastLoop, value, target, propertyPath, callBackGuid);
         }
 
         static bool TryStartAnimation(DependencyObject target, CSSEquivalent cssEquivalent, Color? from, object to, Duration Duration, EasingFunctionBase easingFunction, string visualStateGroupName, DependencyProperty dependencyProperty, Action callbackForWhenfinished = null)
@@ -301,6 +297,11 @@ namespace Windows.UI.Xaml.Media.Animation
 
                         target.DirtyVisualValue(dependencyProperty);
                         return true;
+                    }
+                    else
+                    {
+                        callbackForWhenfinished?.Invoke();
+                        return false;
                     }
                 }
                 return false;

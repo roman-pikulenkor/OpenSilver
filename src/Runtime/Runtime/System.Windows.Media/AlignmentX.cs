@@ -1,4 +1,3 @@
-﻿
 
 /*===================================================================================
 * 
@@ -12,21 +11,28 @@
 *  
 \*====================================================================================*/
 
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 #if MIGRATION
-namespace System.Windows
+namespace System.Windows.Media
 #else
-namespace Windows.UI.Xaml
+namespace Windows.UI.Xaml.Media
 #endif
 {
-    interface ICanConvertToCSSValues
-    {
-        List<object> ConvertToCSSValues(DependencyObject parent);
-    }
+    /// <summary>
+    /// Describes how content is positioned horizontally in a container.
+    /// </summary>
+    public enum AlignmentX
+	{
+        /// <summary>
+        /// The contents align toward the left of the container.
+        /// </summary>
+        Left = 0,
+        /// <summary>
+        /// The contents align toward the center of the container.
+        /// </summary>
+		Center = 1,
+        /// <summary>
+        /// The contents align toward the right of the container.
+        /// </summary>
+		Right = 2
+	}
 }

@@ -64,6 +64,7 @@
 		<Compile Include="OpenSilver\Internal\CriticalExceptions.cs" />
 		<Compile Include="OpenSilver\Internal\DebounceDispatcher.cs" />
 		<Compile Include="OpenSilver\Internal\DependentList.cs" />
+		<Compile Include="OpenSilver\Internal\Helper.cs" />
 		<Compile Include="OpenSilver\Internal\INameResolver.cs" />
 		<Compile Include="OpenSilver\Internal\NativeEventsManager.cs" />
 		<Compile Include="OpenSilver\Internal\InheritedPropertyChangedEventArgs.cs" />
@@ -563,15 +564,15 @@
 		<Compile Include="System.Windows.Interop\WORKINPROGRESS\Settings.cs" />
 		<Compile Include="System.Windows.Interop\WORKINPROGRESS\SilverlightHost.cs" />
 		<Compile Include="System.Windows.Markup\XamlReader.cs" />
-		<Compile Include="System.Windows.Media\WORKINPROGRESS\AlignmentX.cs" />
-		<Compile Include="System.Windows.Media\WORKINPROGRESS\AlignmentY.cs" />
+		<Compile Include="System.Windows.Media\AlignmentX.cs" />
+		<Compile Include="System.Windows.Media\AlignmentY.cs" />
 		<Compile Include="System.Windows.Media\WORKINPROGRESS\CompositionTarget.cs" />
 		<Compile Include="System.Windows.Media\WORKINPROGRESS\Fonts.cs" />
 		<Compile Include="System.Windows.Media\WORKINPROGRESS\GlyphTypeface.cs" />
-		<Compile Include="System.Windows.Media\WORKINPROGRESS\ImageBrush.cs" />
+		<Compile Include="System.Windows.Media\ImageBrush.cs" />
 		<Compile Include="System.Windows.Media\WORKINPROGRESS\Matrix3DProjection.cs" />
 		<Compile Include="System.Windows.Media\WORKINPROGRESS\PlaneProjection.cs" />
-		<Compile Include="System.Windows.Media\WORKINPROGRESS\TileBrush.cs" />
+		<Compile Include="System.Windows.Media\TileBrush.cs" />
 		<Compile Include="System.Windows.Media\WORKINPROGRESS\Typeface.cs" />
 		<Compile Include="System.Windows.Media.Animation\WORKINPROGRESS\DiscreteDoubleKeyFrame.cs" />
 		<Compile Include="System.Windows.Media.Animation\WORKINPROGRESS\LinearDoubleKeyFrame.cs" />
@@ -1077,9 +1078,6 @@
 		<Compile Include="System.Windows\GridUnitType.cs" />
 		<Compile Include="System.Windows\HorizontalAlignment.cs" />
 		<Compile Include="System.Windows\Host.cs" />
-		<Compile Include="System.Windows\ICanConvertToCSSValue.cs" />
-		<Compile Include="System.Windows\ICanConvertToCSSValues.cs" />
-		<Compile Include="System.Windows\ICloneOnAnimation.cs" />
 		<Compile Include="System.Windows\IHasAccessToPropertiesWhereItIsUsed.cs" />
 		<Compile Include="System.Windows\MessageBox.cs" />
 		<Compile Include="System.Windows\MessageBoxButton.cs" />
