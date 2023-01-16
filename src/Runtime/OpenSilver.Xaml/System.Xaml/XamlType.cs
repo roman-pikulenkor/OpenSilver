@@ -35,6 +35,10 @@ using System.Xaml.Markup;
 using System.Xaml.Schema;
 using System.Xml.Serialization;
 
+#if !MIGRATION
+using Windows.UI.Xaml.Markup;
+#endif
+
 namespace System.Xaml
 {
 	internal class ReferenceComparer : IEqualityComparer<object>
@@ -45,7 +49,7 @@ namespace System.Xaml
 		public int GetHashCode(object obj) => obj.GetHashCode();
 	}
 
-	public class XamlType : IEquatable<XamlType>
+    internal class XamlType : IEquatable<XamlType>
 	{
 		FlagValue flags;
 		static class TypeFlags
@@ -565,7 +569,7 @@ namespace System.Xaml
 			var al = new Dictionary<string, MethodInfo>();
 			//var rl = new Dictionary<string,MethodInfo> ();
 			var nl = new List<string>();
-			foreach (var mi in UnderlyingType.GetRuntimeMethods())
+			foreach (var mi in UnderlyingType.GetMethods())
 			{
 				if (!mi.IsStatic)
 					continue;
@@ -959,36 +963,14 @@ namespace System.Xaml
 			if (t == null)
 				return null;
 
-			var converterName = CustomAttributeProvider.GetTypeConverterName(false);
-			if (converterName != null)
-				return SchemaContext.GetValueConverter<TypeConverter>(Type.GetType(converterName), this);
+			var tc = TypeConverterHelper.GetConverter(t);
 
-			// equivalent to TypeExtension.
-			// FIXME: not sure if it should be specially handled here.
-			if (t == typeof(Type))
-				t = typeof(TypeExtension);
-
-			t = Nullable.GetUnderlyingType(t) ?? t;
-
-			if (t == typeof(object)) // This is a special case. ConverterType is null.
-				return SchemaContext.GetValueConverter<TypeConverter>(null, this);
-
-			if (t == typeof(DateTime))
-				return SchemaContext.GetValueConverter<TypeConverter>(typeof(DateTimeConverter), this);
-
-			if (t == typeof(Uri))
-				return SchemaContext.GetValueConverter<TypeConverter>(typeof(UriTypeConverter), this);
-
-			// It's still not decent to check CollectionConverter.
-
-			var tc = t.GetTypeConverter();
-
-			if (tc != null && !tc.IsBaseTypeConverter())
+			if (tc != null)
 			{
-				var vc = SchemaContext.GetValueConverter<TypeConverter>(tc.GetType(), this);
-				vc.ConverterInstance = tc;
-				return vc;
-			}
+                var vc = SchemaContext.GetValueConverter<TypeConverter>(tc.GetType(), this);
+                vc.ConverterInstance = tc;
+                return vc;
+            }
 
 			return null;
 		}
