@@ -66,6 +66,14 @@ namespace DotNetForHtml5.Compiler
             }
         }
 
+        public void SetCompilerType(CompilerTypesEnum compierType)
+        {
+            if (_marshalledObject == null)
+                throw new Exception("MarshalledObject is null. It should not be null to set Compiler Type.");
+
+            _marshalledObject.CompilerType = compierType;
+        }
+
         Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
         {
             return Assembly.Load(args.Name); // This is required so that when the "Unwrap" call above is done, we can locate the "CSharpXamlForHtml5.Compiler.Common.dll" file. // For information: http://forums.codeguru.com/showthread.php?398030-AppDomain-CreateInstanceAndUnwrap(-)-vs-AppDomain-CreateInstanceFrom
@@ -173,12 +181,6 @@ namespace DotNetForHtml5.Compiler
         public string GetCSharpEquivalentOfXamlTypeAsString(string namespaceName, string localTypeName, string assemblyNameIfAny = null, bool ifTypeNotFoundTryGuessing = false)
         {
             return _marshalledObject.GetCSharpEquivalentOfXamlTypeAsString(namespaceName, localTypeName, assemblyNameIfAny, ifTypeNotFoundTryGuessing);
-        }
-
-        public string GetVbEquivalentOfXamlTypeAsString(string namespaceName, string localTypeName, string assemblyNameIfAny = null, bool ifTypeNotFoundTryGuessing = false)
-        {
-            string result = _marshalledObject.GetCSharpEquivalentOfXamlTypeAsString(namespaceName, localTypeName, assemblyNameIfAny, ifTypeNotFoundTryGuessing);
-            return result.Replace("global::", "Global.");
         }
 
         public string GetAssemblyQualifiedNameOfXamlType(string namespaceName, string localTypeName, string assemblyName)
@@ -291,15 +293,17 @@ namespace DotNetForHtml5.Compiler
             return _marshalledObject.GetField(fieldName, namespaceName, typeName, assemblyName);
         }
 
-        public string GetVBField(string fieldName, string namespaceName, string typeName, string assemblyName)
-        {
-            string result = _marshalledObject.GetField(fieldName, namespaceName, typeName, assemblyName);
-            return result.Replace("global::", "Global.");
-        }
-
         public string GetEventHandlerType(string eventName, string namespaceName, string typeName, string assemblyName)
         {
             return _marshalledObject.GetEventHandlerType(eventName, namespaceName, typeName, assemblyName);
+        }
+
+        public class InvalidCompilerTypeException : Exception
+        {
+            public InvalidCompilerTypeException():base("Invalid Compiler Type")
+            {
+
+            }
         }
 
         public class MarshalledObject : MarshalByRefObject, IMarshalledObject
@@ -323,6 +327,13 @@ namespace DotNetForHtml5.Compiler
             Dictionary<Assembly, bool> _onlyReflectionLoaded = new Dictionary<Assembly, bool>();
 #endif
 
+
+            private CompilerTypesEnum _compilerType;
+            public CompilerTypesEnum CompilerType  // read-write instance property
+            {
+                get => _compilerType;
+                set => _compilerType = value;
+            }
 
             delegate void ReferencedAssemblyLoadedDelegate(Assembly assembly, string originalAssemblyFolder);
 
@@ -811,6 +822,11 @@ namespace DotNetForHtml5.Compiler
                     namespaceName = namespaceName.Substring("global::".Length);
                 }
 
+                if (namespaceName.StartsWith("Global.", StringComparison.CurrentCultureIgnoreCase)) // Note: normally in XAML there is no "Global.", but we may enter this method passing a VB.Net-style namespace (cf. section that handles Binding in "GeneratingVBCode.cs")
+                {
+                    namespaceName = namespaceName.Substring("Global.".Length);
+                }
+
                 // Handle special cases:
                 if (localTypeName == "StaticResource")
                 {
@@ -982,12 +998,28 @@ namespace DotNetForHtml5.Compiler
                             }
                             else
                             {
-                                return string.Format(
-                                    "global::{0}{1}{2}",
-                                    namespaceName,
-                                    string.IsNullOrEmpty(namespaceName) ? string.Empty : ".",
-                                    localTypeName
-                                );
+                                if (CompilerType == CompilerTypesEnum.CSharp)
+                                {
+                                    return string.Format(
+                                        "global::{0}{1}{2}",
+                                        namespaceName,
+                                        string.IsNullOrEmpty(namespaceName) ? string.Empty : ".",
+                                        localTypeName
+                                    );
+                                } 
+                                else if (CompilerType == CompilerTypesEnum.VBNet)
+                                {
+                                    return string.Format(
+                                        "Global.{0}{1}{2}",
+                                        namespaceName,
+                                        string.IsNullOrEmpty(namespaceName) ? string.Empty : ".",
+                                        localTypeName
+                                    );
+                                } 
+                                else
+                                {
+                                    throw new InvalidCompilerTypeException();
+                                }
                             }
                         }
                         else
@@ -1000,7 +1032,18 @@ namespace DotNetForHtml5.Compiler
                     else
                     {
                         // Use information from the type
-                        return $"global::{type}";
+                        if (CompilerType == CompilerTypesEnum.CSharp)
+                        {
+                            return $"global::{type}";
+                        }
+                        else if (CompilerType == CompilerTypesEnum.VBNet)
+                        {
+                            return $"Global.{type}";
+                        }
+                        else
+                        {
+                            throw new InvalidCompilerTypeException();
+                        }
                     }
                 }
             }
@@ -1053,7 +1096,18 @@ namespace DotNetForHtml5.Compiler
                     {
                         if (type.GetField(fieldName, BindingFlags.Static | BindingFlags.Public) != null)
                         {
-                            return "global::" + type.ToString() + "." + fieldName;
+                            if (CompilerType == CompilerTypesEnum.CSharp)
+                            {
+                                return "global::" + type.ToString() + "." + fieldName;
+                            }
+                            else if (CompilerType == CompilerTypesEnum.VBNet)
+                            {
+                                return "Global." + type.ToString() + "." + fieldName;
+                            }
+                            else
+                            {
+                                throw new InvalidCompilerTypeException();
+                            }
                         }
                         type = type.BaseType;
                     }
@@ -1220,7 +1274,17 @@ namespace DotNetForHtml5.Compiler
             {
                 var type = GetMethodReturnValueType(methodName, namespaceName, localTypeName, assemblyNameIfAny);
                 returnValueNamespaceName = this.BuildPropertyPathRecursively(type);
-                returnValueLocalTypeName = GetTypeNameIncludingGenericArguments(type, false);
+                returnValueLocalTypeName = GetCSharpTypeNameIncludingGenericArguments(type, false);
+                returnValueAssemblyName = type.Assembly.GetName().Name;
+                isTypeString = (type == typeof(string));
+                isTypeEnum = (type.IsEnum);
+            }
+
+            public void GetVBMethodReturnValueTypeInfo(string methodName, string namespaceName, string localTypeName, out string returnValueNamespaceName, out string returnValueLocalTypeName, out string returnValueAssemblyName, out bool isTypeString, out bool isTypeEnum, string assemblyNameIfAny = null)
+            {
+                var type = GetMethodReturnValueType(methodName, namespaceName, localTypeName, assemblyNameIfAny);
+                returnValueNamespaceName = this.BuildPropertyPathRecursively(type);
+                returnValueLocalTypeName = GetCSharpTypeNameIncludingGenericArguments(type, false);
                 returnValueAssemblyName = type.Assembly.GetName().Name;
                 isTypeString = (type == typeof(string));
                 isTypeEnum = (type.IsEnum);
@@ -1279,9 +1343,9 @@ namespace DotNetForHtml5.Compiler
                     throw new XamlParseException("Method \"" + methodName + "\" not found in type \"" + elementType.ToString() + "\".");
                 }
 
-                declaringTypeName = GetTypeNameIncludingGenericArguments(methodInfo.DeclaringType, true);
+                declaringTypeName = GetCSharpTypeNameIncludingGenericArguments(methodInfo.DeclaringType, true);
                 returnValueNamespaceName = this.BuildPropertyPathRecursively(methodInfo.ReturnType);
-                returnValueLocalTypeName = GetTypeNameIncludingGenericArguments(methodInfo.ReturnType, false);
+                returnValueLocalTypeName = GetCSharpTypeNameIncludingGenericArguments(methodInfo.ReturnType, false);
                 isTypeString = methodInfo.ReturnType == typeof(string);
                 isTypeEnum = methodInfo.ReturnType.IsEnum;
             }
@@ -1290,11 +1354,22 @@ namespace DotNetForHtml5.Compiler
             {
                 var type = GetPropertyOrFieldType(propertyOrFieldName, namespaceName, localTypeName, assemblyNameIfAny, isAttached: isAttached);
                 propertyNamespaceName = this.BuildPropertyPathRecursively(type);
-                propertyLocalTypeName = GetTypeNameIncludingGenericArguments(type, false);
+                propertyLocalTypeName = GetCSharpTypeNameIncludingGenericArguments(type, false);
                 propertyAssemblyName = type.Assembly.GetName().Name;
                 isTypeString = (type == typeof(string));
                 isTypeEnum = (type.IsEnum);
             }
+
+            public void GetVBPropertyOrFieldTypeInfo(string propertyOrFieldName, string namespaceName, string localTypeName, out string propertyNamespaceName, out string propertyLocalTypeName, out string propertyAssemblyName, out bool isTypeString, out bool isTypeEnum, string assemblyNameIfAny = null, bool isAttached = false)
+            {
+                var type = GetPropertyOrFieldType(propertyOrFieldName, namespaceName, localTypeName, assemblyNameIfAny, isAttached: isAttached);
+                propertyNamespaceName = this.BuildPropertyPathRecursively(type);
+                propertyLocalTypeName = GetCSharpTypeNameIncludingGenericArguments(type, false);
+                propertyAssemblyName = type.Assembly.GetName().Name;
+                isTypeString = (type == typeof(string));
+                isTypeEnum = (type.IsEnum);
+            }
+            
 
             public void GetPropertyOrFieldInfo(string propertyOrFieldName, string namespaceName, string localTypeName, out string memberDeclaringTypeName, out string memberTypeNamespace, out string memberTypeName, out bool isTypeString, out bool isTypeEnum, string assemblyNameIfAny = null, bool isAttached = false)
             {
@@ -1328,9 +1403,9 @@ namespace DotNetForHtml5.Compiler
                     propertyOrFieldType = propertyInfo.PropertyType;
                     propertyOrFieldDeclaringType = propertyInfo.DeclaringType;
                 }
-                memberDeclaringTypeName = GetTypeNameIncludingGenericArguments(propertyOrFieldDeclaringType, true);
+                memberDeclaringTypeName = GetCSharpTypeNameIncludingGenericArguments(propertyOrFieldDeclaringType, true);
                 memberTypeNamespace = this.BuildPropertyPathRecursively(propertyOrFieldType);
-                memberTypeName = GetTypeNameIncludingGenericArguments(propertyOrFieldType, false);
+                memberTypeName = GetCSharpTypeNameIncludingGenericArguments(propertyOrFieldType, false);
                 isTypeString = (propertyOrFieldType == typeof(string));
                 isTypeEnum = (propertyOrFieldType.IsEnum);
             }
@@ -1351,12 +1426,23 @@ namespace DotNetForHtml5.Compiler
                 return fullPath;
             }
 
-            private static string GetTypeNameIncludingGenericArguments(Type type, bool appendNamespace)
+            private string GetCSharpTypeNameIncludingGenericArguments(Type type, bool appendNamespace)
             {
                 string result = "";
                 if (appendNamespace)
                 {
-                    result += "global::";
+                    if (CompilerType == CompilerTypesEnum.CSharp)
+                    {
+                        result += "global::";
+                    }
+                    else if (CompilerType == CompilerTypesEnum.VBNet)
+                    {
+                        result += "Global.";
+                    }
+                    else
+                    {
+                        throw new InvalidCompilerTypeException();
+                    }
                     if (!string.IsNullOrEmpty(type.Namespace))
                     {
                         result += type.Namespace + ".";
@@ -1368,7 +1454,18 @@ namespace DotNetForHtml5.Compiler
                 if (type.IsGenericType)
                 {
                     result = result.Split('`')[0];
-                    result += $"<{string.Join(", ", type.GenericTypeArguments.Select(x => GetTypeNameIncludingGenericArguments(x, true)))}>";
+                    if (CompilerType == CompilerTypesEnum.CSharp)
+                    {
+                        result += $"<{string.Join(", ", type.GenericTypeArguments.Select(x => GetCSharpTypeNameIncludingGenericArguments(x, true)))}>";
+                    }
+                    else if (CompilerType == CompilerTypesEnum.VBNet)
+                    {
+                        result += $"(Of {string.Join(", ", type.GenericTypeArguments.Select(x => GetCSharpTypeNameIncludingGenericArguments(x, true)))})";
+                    }
+                    else
+                    {
+                        throw new InvalidCompilerTypeException();
+                    }
                 }
                 return result;
             }
@@ -1380,7 +1477,7 @@ namespace DotNetForHtml5.Compiler
                 FieldInfo fieldInfo = elementType.GetField(fieldName);
                 Type declaringType = fieldInfo.DeclaringType;
                 assemblyNameOfDeclaringType = declaringType.Assembly.GetName().Name;
-                return GetTypeNameIncludingGenericArguments(declaringType, true);
+                return GetCSharpTypeNameIncludingGenericArguments(declaringType, true);
             }
 
             public string GetPropertyDeclaringTypeName(string propertyName, string namespaceName, string localTypeName, out string assemblyNameOfDeclaringType, string assemblyNameIfAny = null)
@@ -1398,7 +1495,7 @@ namespace DotNetForHtml5.Compiler
                 }
                 Type declaringType = propertyInfo.DeclaringType;
                 assemblyNameOfDeclaringType = declaringType.Assembly.GetName().Name;
-                return GetTypeNameIncludingGenericArguments(declaringType, true);
+                return GetCSharpTypeNameIncludingGenericArguments(declaringType, true);
             }
             MemberInfo GetMemberInfo(string memberName, string namespaceName, string localTypeName, string assemblyNameIfAny = null, bool returnNullIfNotFoundInsteadOfException = false)
             {
@@ -1824,11 +1921,33 @@ namespace DotNetForHtml5.Compiler
                     FieldInfo xamlValueToEnumValue = type.GetField(xamlValue, BindingFlags.IgnoreCase);
                     if (xamlValueToEnumValue == null)
                     {
-                        generatedCSharpCode = String.Format("{0}.{1}", "global::" + type.FullName, xamlValue);
+                        if (CompilerType == CompilerTypesEnum.CSharp)
+                        {
+                            generatedCSharpCode = String.Format("{0}.{1}", "global::" + type.FullName, xamlValue);
+                        }
+                        else if (CompilerType == CompilerTypesEnum.VBNet)
+                        {
+                            generatedCSharpCode = String.Format("{0}.{1}", "Global." + type.FullName, xamlValue);
+                        }
+                        else
+                        {
+                            throw new InvalidCompilerTypeException();
+                        }
                     }
                     else
                     {
-                        generatedCSharpCode = String.Format("{0}.{1}", "global::" + type.FullName, xamlValueToEnumValue.Name);
+                        if (CompilerType == CompilerTypesEnum.CSharp)
+                        {
+                            generatedCSharpCode = String.Format("{0}.{1}", "global::" + type.FullName, xamlValueToEnumValue.Name);
+                        }
+                        else if (CompilerType == CompilerTypesEnum.VBNet)
+                        {
+                            generatedCSharpCode = String.Format("{0}.{1}", "Global." + type.FullName, xamlValueToEnumValue.Name);
+                        }
+                        else
+                        {
+                            throw new InvalidCompilerTypeException();
+                        }
                     }
                     return true;
                 }
@@ -1960,7 +2079,7 @@ namespace DotNetForHtml5.Compiler
                     if ((field = type.GetField(fieldName, lookup)) != null &&
                         (field.IsPublic || field.IsAssembly || field.IsFamilyOrAssembly))
                     {
-                        return $"{GetTypeNameIncludingGenericArguments(field.DeclaringType, true)}.{field.Name}";
+                        return $"{GetCSharpTypeNameIncludingGenericArguments(field.DeclaringType, true)}.{field.Name}";
                     }
                 }
 
@@ -1977,7 +2096,7 @@ namespace DotNetForHtml5.Compiler
                     throw new XamlParseException($"'{type}' does not contain an event named '{eventName}'.");
                 }
 
-                return GetTypeNameIncludingGenericArguments(eventInfo.EventHandlerType, true);
+                return GetCSharpTypeNameIncludingGenericArguments(eventInfo.EventHandlerType, true);
             }
         }
 

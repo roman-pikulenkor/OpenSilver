@@ -166,6 +166,7 @@ namespace DotNetForHtml5.Compiler
                             if (outputFile.EndsWith(".cs"))
                             {
                                 // Convert XAML to CS:
+                                reflectionOnSeparateAppDomain.SetCompilerType(Common.CompilerTypesEnum.CSharp);
                                 generatedCode = ConvertingXamlToCSharp.Convert(xaml, sourceFile, fileNameWithPathRelativeToProjectRoot, assemblyNameWithoutExtension, reflectionOnSeparateAppDomain, isFirstPass: !isSecondPass, isSLMigration: isSLMigration, outputRootPath: outputRootPath, outputAppFilesPath: outputAppFilesPath, outputLibrariesPath: outputLibrariesPath, outputResourcesPath: outputResourcesPath, logger: logger);
 
                                 // Add the header that contains the file hash so as to avoid re-processing the file if not needed:
@@ -177,6 +178,7 @@ namespace DotNetForHtml5.Compiler
                             else if (outputFile.EndsWith(".vb"))
                             {
                                 // Convert XAML to VB:
+                                reflectionOnSeparateAppDomain.SetCompilerType(Common.CompilerTypesEnum.VBNet);
                                 generatedCode = ConvertingXamlToVB.Convert(xaml, sourceFile, fileNameWithPathRelativeToProjectRoot, assemblyNameWithoutExtension, reflectionOnSeparateAppDomain, isFirstPass: !isSecondPass, isSLMigration: isSLMigration, outputRootPath: outputRootPath, outputAppFilesPath: outputAppFilesPath, outputLibrariesPath: outputLibrariesPath, outputResourcesPath: outputResourcesPath, logger: logger);
 
                                 // Add the header that contains the file hash so as to avoid re-processing the file if not needed:

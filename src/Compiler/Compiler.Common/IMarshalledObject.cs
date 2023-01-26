@@ -29,6 +29,12 @@ namespace DotNetForHtml5.Compiler.Common
 
     public interface IMarshalledObject
     {
+        CompilerTypesEnum CompilerType
+        {
+            get;
+            set;
+        }
+
         string LoadAssembly(string assemblyPath, bool loadReferencedAssembliesToo, bool isBridgeBasedVersion, bool isCoreAssembly, string nameOfAssembliesThatDoNotContainUserCode, bool skipReadingAttributesFromAssemblies);
 
         void LoadAssemblyAndAllReferencedAssembliesRecursively(string assemblyPath, bool isBridgeBasedVersion, bool isCoreAssembly, string nameOfAssembliesThatDoNotContainUserCode, bool skipReadingAttributesFromAssemblies, out List<string> assemblySimpleNames);
@@ -114,5 +120,12 @@ namespace DotNetForHtml5.Compiler.Common
         string GetField(string fieldName, string namespaceName, string typeName, string assemblyName);
 
         string GetEventHandlerType(string eventName, string namespaceName, string typeName, string assemblyName);
+    }
+
+    public enum CompilerTypesEnum
+    {
+        None,
+        CSharp,
+        VBNet,
     }
 }

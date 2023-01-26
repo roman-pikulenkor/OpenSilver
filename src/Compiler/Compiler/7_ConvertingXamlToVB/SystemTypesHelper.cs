@@ -271,7 +271,7 @@ namespace DotNetForHtml5.Compiler
 
         private static string Escape(string s)
         {
-            return string.Concat("@\"", s.Replace("\"", "\"\""), "\"");
+            return string.Concat("\"", s.Replace("\"", "\"\""), "\"");
         }
     }
 }

@@ -158,12 +158,11 @@ namespace DotNetForHtml5.Compiler
             return -1;
         }
 
-        private static bool IsAttributeTheXNameAttribute(XAttribute attribute)
-        {
-            bool isXName = (attribute.Name.LocalName == "Name" && attribute.Name.NamespaceName == xNamespace);
-            bool isName = (attribute.Name.LocalName == "Name" && string.IsNullOrEmpty(attribute.Name.NamespaceName));
-            return isXName || isName;
-        }
+        private static bool IsXNameAttribute(XAttribute attr)
+            => attr.Name.LocalName == "Name" && attr.Name.NamespaceName == xNamespace;
+
+        private static bool IsNameAttribute(XAttribute attr)
+            => attr.Name.LocalName == "Name" && string.IsNullOrEmpty(attr.Name.NamespaceName);
 
         private static string CreateInitializeComponentMethod(
             string applicationTypeFullName,
@@ -287,7 +286,7 @@ End Class
             // Get the base type of the control:
             string namespaceName, localTypeName, assemblyNameIfAny;
             GettingInformationAboutXamlTypesVB.GetClrNamespaceAndLocalName(doc.Root.Name, out namespaceName, out localTypeName, out assemblyNameIfAny);
-            baseType = reflectionOnSeparateAppDomain.GetVbEquivalentOfXamlTypeAsString(namespaceName, localTypeName, assemblyNameIfAny, ifTypeNotFoundTryGuessing: true); // Note: we set "ifTypeNotFoundTryGuessing" to true because the type will not be found during Pass1 for example in the case that tthe root of the XAML file is: <myNamespace:MyCustumUserControlDerivedClass .../>
+            baseType = reflectionOnSeparateAppDomain.GetCSharpEquivalentOfXamlTypeAsString(namespaceName, localTypeName, assemblyNameIfAny, ifTypeNotFoundTryGuessing: true); // Note: we set "ifTypeNotFoundTryGuessing" to true because the type will not be found during Pass1 for example in the case that tthe root of the XAML file is: <myNamespace:MyCustumUserControlDerivedClass .../>
         }
 
         private static string GetFullTypeName(string namespaceName, string typeName)
@@ -384,6 +383,7 @@ End Class
         private const string IXamlComponentLoaderClass = "Global.OpenSilver.Internal.Xaml.IXamlComponentLoader";
         private const string IComponentConnectorClass = "Global.OpenSilver.Internal.Xaml.IComponentConnector";
         private const string XamlContextClass = "Global.OpenSilver.Internal.Xaml.Context.XamlContext";
+        private const string IMarkupExtensionClass = "Global.System.Xaml.IMarkupExtension<object>";
 
         public static bool IsDataTemplate(XElement element) => IsXElementOfType(element, "DataTemplate");
 

@@ -439,13 +439,13 @@ namespace DotNetForHtml5.Compiler
 
         private static string ConvertToFontWeight(string source, string destinationType, string fontWeightsTypeFullName)
         {
-            if (Enum.TryParse(source, true, out FontweightsEnumVB fontCode))
+            if (Enum.TryParse(source, true, out FontWeightsCodeVB fontCode))
             {
                 return $"{fontWeightsTypeFullName}.{fontCode}";
             }
             else if (ushort.TryParse(source, out ushort code))
             {
-                string fontName = Enum.GetName(typeof(FontweightsEnumVB), code);
+                string fontName = Enum.GetName(typeof(FontWeightsCodeVB), code);
                 if (fontName != null)
                 {
                     return $"{fontWeightsTypeFullName}.{fontName}";
