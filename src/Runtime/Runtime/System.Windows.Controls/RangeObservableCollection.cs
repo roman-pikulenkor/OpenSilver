@@ -29,6 +29,11 @@ namespace Windows.UI.Xaml.Controls
     {
         private bool _suppressNotification = false;
 
+        public RangeObservableCollection(IEnumerable<T> collection)
+            :base(collection)
+        {
+        }
+
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             if (!_suppressNotification)
