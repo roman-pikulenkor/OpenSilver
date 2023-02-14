@@ -491,7 +491,7 @@ namespace DotNetForHtml5.Compiler
                                 // Add the code to register the name, etc.
                                 if (isElementInRootNamescope && parameters.GenerateFieldsForNamedElements)
                                 {
-                                    string fieldModifier = "Private";
+                                    string fieldModifier = "Private WithEvents";
                                     string fieldName = name;
                                     parameters.ResultingFieldsForNamedElements.Add(    string.Format("{0} {1} As {2}", fieldModifier, fieldName, elementTypeInCSharp));
                                     parameters.ResultingFindNameCalls.Add($"Me.{fieldName} = (CType(Me.FindName(\"{name}\"), {elementTypeInCSharp}))");

@@ -82,7 +82,7 @@ namespace DotNetForHtml5.Compiler
                         string name = xNameAttr.Value;
                         if (!string.IsNullOrWhiteSpace(name))
                         {
-                            string fieldModifier = "Private";
+                            string fieldModifier = "Private WithEvents";
                             string fieldName = name;
                             resultingFieldsForNamedElements.Add(string.Format("    {0} {1} As {2}", fieldModifier, fieldName, elementTypeInCSharp));
                         }
