@@ -392,7 +392,7 @@ namespace Windows.UI.Xaml
 
                 if (needToClipSlot)
                 {
-                    Point offset = VisualOffset;
+                    Point offset = ComputeAlignmentOffset(clippingSize, inkSize);
 
                     double left, top, width, height;
                     if (offset.X < 0)
