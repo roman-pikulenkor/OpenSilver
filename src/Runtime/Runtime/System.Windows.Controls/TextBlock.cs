@@ -390,8 +390,11 @@ namespace Windows.UI.Xaml.Controls
 
         protected override Size ArrangeOverride(Size finalSize)
         {
-            double w = Math.Max(_measuredSize.Width, finalSize.Width);
-            double h = Math.Max(_measuredSize.Height, finalSize.Height);
+            double measuredWidthWithoutPadding = Math.Max(0, _measuredSize.Width - Padding.Left - Padding.Right);
+            double measuredHeightWithoutPadding = Math.Max(0, _measuredSize.Height - Padding.Top - Padding.Bottom);
+
+            double w = Math.Max(measuredWidthWithoutPadding, finalSize.Width);
+            double h = Math.Max(measuredHeightWithoutPadding, finalSize.Height);
 
             return new Size(w, h);
         }
