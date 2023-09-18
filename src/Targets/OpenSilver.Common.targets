@@ -106,9 +106,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(MSBuildProjectExtension.ToLower())'=='.csproj'">
     <OutputExtension>.g.cs</OutputExtension>
+    <CompilerTypeInt>1</CompilerTypeInt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(MSBuildProjectExtension.ToLower())'=='.vbproj'">
     <OutputExtension>.g.vb</OutputExtension>
+    <CompilerTypeInt>2</CompilerTypeInt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Cshtml5OutputRootPath)'==''">
     <!-- Default output root path. This path can be either absolute, or relative to the "bin\Debug\" folder.. -->
@@ -388,6 +390,7 @@
       IsSecondPass="$(IsSecondPass)"
       IsSLMigration="$(IsSLMigration)"      
       Flags="$(Flags)"
+      CompilerTypeInt="$(CompilerTypeInt)"
       ResolvedReferences="@(_ResolveAssemblyReferenceResolvedFiles)"
       SourceAssemblyForPass2="$(OutputAssemblyDirectory)\$(AssemblyName).dll"
       IsProcessingCSHTML5Itself="$(NoCSHTML5Reference)"
@@ -617,6 +620,7 @@
       IsSecondPass="false"
       IsSLMigration="$(IsSLMigration)"
       Flags="$(Flags)"
+      CompilerTypeInt="$(CompilerTypeInt)"
       ResolvedReferences="@(_ResolveAssemblyReferenceResolvedFiles)"
       />
 
