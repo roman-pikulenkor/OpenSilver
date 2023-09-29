@@ -408,6 +408,7 @@
     OutputLibrariesPath="$(Cshtml5OutputLibrariesPath)"
     OutputResourcesPath="$(Cshtml5OutputResourcesPath)"
     Flags="$(Flags)"
+    RootNamespace="$(RootNamespace)"
     Language="$(Language)"
     />
     <!--============================================================
@@ -427,6 +428,7 @@
     OutputLibrariesPath="$(Cshtml5OutputLibrariesPath)"
     OutputResourcesPath="$(Cshtml5OutputResourcesPath)"
     Flags="$(Flags)"
+    RootNamespace="$(RootNamespace)"
     Language="$(Language)"
     />
     <AfterXamlPreprocessor
@@ -638,6 +640,7 @@
     OutputLibrariesPath="$(Cshtml5OutputLibrariesPath)"
     OutputResourcesPath="$(Cshtml5OutputResourcesPath)"
     Flags="$(Flags)"
+    RootNamespace="$(RootNamespace)"
     Language="$(Language)"
     />
     <!--============================================================
@@ -657,6 +660,7 @@
     OutputLibrariesPath="$(Cshtml5OutputLibrariesPath)"
     OutputResourcesPath="$(Cshtml5OutputResourcesPath)"
     Flags="$(Flags)"
+    RootNamespace="$(RootNamespace)"
     Language="$(Language)"
     />
 
