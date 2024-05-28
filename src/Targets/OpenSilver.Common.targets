@@ -23,6 +23,7 @@
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\tools\$(_OpenSilverCompilerAssemblyName).dll" TaskName="OpenSilver.Compiler.Updates" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\tools\$(_OpenSilverCompilerAssemblyName).dll" TaskName="OpenSilver.Compiler.ChangeInPlaceXamlToGenerated" />
   <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\tools\$(_OpenSilverCompilerResourcesAssemblyName).dll" TaskName="OpenSilver.Compiler.Resources.ResourcesExtractorAndCopier" />
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\tools\$(_OpenSilverCompilerBlazorAssemblyName).dll" TaskName="OpenSilver.Compiler.Blazor.BlazorComponentProcessor" />
 
   <Import Project="$(MSBuildThisFileDirectory)\OpenSilver.GenerateAssemblyInfo.targets" />
 
@@ -250,7 +251,30 @@
 
   </Target>
 
+  <Target Name="ProcessorForBlazorinXAML" BeforeTargets="CSharpXamlForHtml5BeforeCompile_NotDesignTime">
+    <Message Text="OpenSilver Blazor Processor Before compile. IsSecondPass=$(IsSecondPass)"
+             Importance="normal"/>
+    <BlazorComponentProcessor
+      Condition="'$(SkipXamlPreprocessor)'!='true' And '$(NoXamlPreprocessor)'!='True'"
+      SourceFiles="@(Content)"
+      IntermediateOutputPath="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)"
+      AssemblyName="$(AssemblyName)"
+      IsSecondPass="$(IsSecondPass)"
+      VerifyHash="false"
+      Language="$(Language)">
+      <Output TaskParameter="RemovedFiles" ItemName="RemovedXamlFiles" />
+      <Output TaskParameter="GeneratedXAMLFiles" ItemName="UpdatedXamlFiles" />
+      <Output TaskParameter="GeneratedCSFiles" ItemName="CompiledCSFiles" />
+      <Output TaskParameter="GeneratedRazorFiles" ItemName="GeneratedRazorFiles"/>
+    </BlazorComponentProcessor>
 
+    <ItemGroup Condition="'$(Language)' == 'C#'">
+      <Content Remove="@(RemovedXamlFiles)" />
+      <Content Include="@(UpdatedXamlFiles)" />
+      <Compile Include="@(CompiledCSFiles)" />
+      <Content Include="@(GeneratedRazorFiles)" />
+    </ItemGroup>
+  </Target>
   <!--============================================================
   BEFORE COMPILE
   ============================================================-->
