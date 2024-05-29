@@ -1,4 +1,5 @@
 ﻿using DotNetForHtml5.EmulatorWithoutJavascript;
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Web.WebView2.Wpf;
 
 namespace OpenSilver.Simulator
@@ -27,5 +28,7 @@ namespace OpenSilver.Simulator
         /// Sets the application init parameters
         /// </summary>
         public string InitParams { get; set; }
+
+        public Action<IJSComponentConfiguration> BlazorCallback { get; set; }
     }
 }

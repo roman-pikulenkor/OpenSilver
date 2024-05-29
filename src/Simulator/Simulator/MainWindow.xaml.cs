@@ -1,16 +1,19 @@
 ﻿extern alias opensilver;
 
 using MahApps.Metro.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Core.DevToolsProtocolExtension;
 using Microsoft.Web.WebView2.Wpf;
 using Microsoft.Win32;
 using OpenSilver;
 using OpenSilver.Simulator;
+using OpenSilver.Simulator.BlazorSupport;
 using OpenSilver.Simulator.XamlInspection;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -19,6 +22,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using Path = System.IO.Path;
 
 namespace DotNetForHtml5.EmulatorWithoutJavascript
@@ -58,7 +63,7 @@ namespace DotNetForHtml5.EmulatorWithoutJavascript
             Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
             Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
 
-            Application.Current.DispatcherUnhandledException += App_DispatcherUnhandledException;
+            //Application.Current.DispatcherUnhandledException += App_DispatcherUnhandledException;
 
             InitializeComponent();
             Instance = this;
@@ -115,6 +120,23 @@ namespace DotNetForHtml5.EmulatorWithoutJavascript
             e.Handled = true;
         }
 
+        private WebView2WebViewManager _webView2WebViewManager;
+
+        private void InitializeBlazor()
+        {
+            var services1 = new ServiceCollection();
+            services1.AddBlazorWebView();
+
+            var jsComponentConfiguration = new JSComponentConfiguration();
+            _simulatorLaunchParameters.BlazorCallback(jsComponentConfiguration);
+
+            var executingAssemblyLocation = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            _webView2WebViewManager = new WebView2WebViewManager(MainWebBrowser, services1.BuildServiceProvider(), new BlazorDispatcher(Dispatcher),
+                new Uri(OpenSilverSimulator), new PhysicalFileProvider(Path.Combine(executingAssemblyLocation, "wwwroot\\")),
+                jsComponentConfiguration.JSComponents, "");
+            _webView2WebViewManager.AddRootComponentAsync(typeof(BlazorApp), "#app", Microsoft.AspNetCore.Components.ParameterView.Empty);
+        }
+
         async void MainWebBrowser_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             if (DisplaySize_Desktop.IsChecked == true
@@ -151,6 +173,7 @@ namespace DotNetForHtml5.EmulatorWithoutJavascript
                 (_, _) => CookiesHelper.SetCustomCookies(MainWebBrowser, _simulatorLaunchParameters?.CookiesData);
 
             await MainWebBrowser.EnsureCoreWebView2Async(environment);
+            MainWebBrowser.CoreWebView2.OpenDevToolsWindow();
 
             var devToolsHelper = MainWebBrowser.CoreWebView2.GetDevToolsProtocolHelper();
             await devToolsHelper.Emulation.SetTouchEmulationEnabledAsync(true);
@@ -188,6 +211,7 @@ namespace DotNetForHtml5.EmulatorWithoutJavascript
                 MainWebBrowser.CoreWebView2.GetDevToolsProtocolEventReceiver("Log.entryAdded").DevToolsProtocolEventReceived += OnConsoleMessageEvent;
             }
 
+            InitializeBlazor();
             LoadIndexFile();
         }
 
@@ -206,7 +230,7 @@ namespace DotNetForHtml5.EmulatorWithoutJavascript
 
         private string PrepareIndexFile()
         {
-            string simulatorRootHtml = File.ReadAllText("simulator_root.html");
+            string simulatorRootHtml = File.ReadAllText("wwwroot\\index.html");
 
             string outputPathAbsolute = GetOutputPathAbsoluteAndReadAssemblyAttributes();
 
@@ -350,6 +374,15 @@ namespace DotNetForHtml5.EmulatorWithoutJavascript
                     e.Response = response;
                     return;
                 }
+            }
+
+            if (_webView2WebViewManager.TryGetResponse(uriString, out var statusCode, out var statusMessage, out var content, out var headers))
+            {
+                var response = environment.CreateWebResourceResponse(
+                    content,
+                    200, "OK", GetHeaders(uriString));
+                e.Response = response;
+                return;
             }
 
             var notFound = environment.CreateWebResourceResponse(
